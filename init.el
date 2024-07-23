@@ -19,8 +19,8 @@
 (setq-default message-log-max nil)
 
 ;; Kill both buffers on startup.
-(kill-buffer "*Messages*")
-(kill-buffer "*scratch*")
+;; (kill-buffer "*Messages*")
+;; (kill-buffer "*scratch*")
 
 ;; functions ============================================
 ;; boostrap straight.el
@@ -54,13 +54,20 @@
     :ensure t)
 
 ;; theme
-(load-theme 'nord t)
+(straight-use-package 'catppuccin-theme)
+(setq catppuccin-flavor 'mocha) ;; or 'latte, 'macchiato, or 'mocha
+(load-theme 'catppuccin :no-confirm)
 
 ;; splash screen
 ;; use the `visual-fill-column' package
 (straight-use-package '(nano-splash :type git :host github
                                    :repo "rougier/nano-splash"))
 (require 'nano-splash)
+
+;; Powerline
+(use-package powerline)
+(require 'powerline)
+(powerline-default-theme)
 
 ;; transparency
 (set-frame-parameter (selected-frame) 'alpha '(85 . 65))

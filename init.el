@@ -13,7 +13,8 @@
 (use-package command-log-mode)
 
 (column-number-mode)
-(global-display-line-numbers-mode t)
+(setq display-line-numbers-type 'relative) 
+(global-display-line-numbers-mode)
 
 ;; Remove messages from the *Messages* buffer.
 (setq-default message-log-max nil)
@@ -70,8 +71,8 @@
 (powerline-default-theme)
 
 ;; transparency
-(set-frame-parameter (selected-frame) 'alpha '(85 . 65))
-(add-to-list 'default-frame-alist '(alpha . (85 . 65)))
+(set-frame-parameter (selected-frame) 'alpha '(85 . 85))
+(add-to-list 'default-frame-alist '(alpha . (85 . 85))) ;; focused . unfocused
 
 ;; ivy 
 (require 'ivy-rich)
@@ -89,15 +90,13 @@
     :prefix "SPC"
     :global-prefix "C-SPC"))
 
-(rune/leader-keys
-  "t"  '(:ignore t :which-key "toggles")
-  "tt" '(counsel-load-theme :which-key "choose theme"))
-
 ;; evil mode
 ;; Download Evil
 (setq evil-want-keybinding nil)
 (unless (package-installed-p 'evil)
   (package-install 'evil))
+;; C-u for page up like in vi
+(setq evil-want-C-u-scroll t)
 ;; Enable Evil
 (require 'evil)
 (evil-mode 1)
@@ -138,20 +137,28 @@
   :config
   (evil-collection-init))
 
-
+;; not allowed to use arrows lmao
 (defun rune/dont-arrow-me-bro ()
   (interactive)
   (message "Arrow keys are bad, you know?"))
 
-  ;; Disable arrow keys in normal and visual modes
-  (define-key evil-normal-state-map (kbd "<left>") 'rune/dont-arrow-me-bro)
-  (define-key evil-normal-state-map (kbd "<right>") 'rune/dont-arrow-me-bro)
-  (define-key evil-normal-state-map (kbd "<down>") 'rune/dont-arrow-me-bro)
-  (define-key evil-normal-state-map (kbd "<up>") 'rune/dont-arrow-me-bro)
-  (evil-global-set-key 'motion (kbd "<left>") 'rune/dont-arrow-me-bro)
-  (evil-global-set-key 'motion (kbd "<right>") 'rune/dont-arrow-me-bro)
-  (evil-global-set-key 'motion (kbd "<down>") 'rune/dont-arrow-me-bro)
-  (evil-global-set-key 'motion (kbd "<up>") 'rune/dont-arrow-me-bro)
+;; Disable arrow keys in normal and visual modes
+(define-key evil-normal-state-map (kbd "<left>") 'rune/dont-arrow-me-bro)
+(define-key evil-normal-state-map (kbd "<right>") 'rune/dont-arrow-me-bro)
+(define-key evil-normal-state-map (kbd "<down>") 'rune/dont-arrow-me-bro)
+(define-key evil-normal-state-map (kbd "<up>") 'rune/dont-arrow-me-bro)
+(evil-global-set-key 'motion (kbd "<left>") 'rune/dont-arrow-me-bro)
+(evil-global-set-key 'motion (kbd "<right>") 'rune/dont-arrow-me-bro)
+(evil-global-set-key 'motion (kbd "<down>") 'rune/dont-arrow-me-bro)
+(evil-global-set-key 'motion (kbd "<up>") 'rune/dont-arrow-me-bro)
+
+;; Now set up general keybindings
+(rune/leader-keys
+  "t"  '(:ignore t :which-key "toggles")
+  "tt" '(counsel-load-theme :which-key "choose theme")
+  "." '(dired :which-key "dired")
+  "," '(list-buffers :which-key "list-buffers")
+  "/" '(Swiper :which-key "swiper"))
 
 (use-package hydra)
 
@@ -160,8 +167,14 @@
   ("j" text-scale-increase "in")
   ("k" text-scale-decrease "out"))
 
+;; keybinds
+(global-set-key (kbd "C-s") 'swiper)
+;; evil keybinds
+(define-key evil-normal-state-map (kbd "/") 'swiper)
+
 (rune/leader-keys
   "ts" '(hydra-text-scale/body :which-key "scale text"))
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -176,4 +189,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+)

@@ -1,0 +1,2 @@
+* Custom Emacs Config
+Exploring configuring Emacs from scratch. Mainly using it as a IDE and for notes writing

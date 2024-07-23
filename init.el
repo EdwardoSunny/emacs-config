@@ -152,13 +152,23 @@
 (evil-global-set-key 'motion (kbd "<down>") 'rune/dont-arrow-me-bro)
 (evil-global-set-key 'motion (kbd "<up>") 'rune/dont-arrow-me-bro)
 
-;; Now set up general keybindings
+;; Now set up general keybindings (SPC + these keys)
 (rune/leader-keys
   "t"  '(:ignore t :which-key "toggles")
-  "tt" '(counsel-load-theme :which-key "choose theme")
+  "tt" '(counsel-load-theme :which-key "choose theme") ;; change theme easily
   "." '(dired :which-key "dired")
   "," '(list-buffers :which-key "list-buffers")
-  "/" '(Swiper :which-key "swiper"))
+  "wv" '(split-window-right :which-key "split-window-right")
+  "ws" '(split-window-below :which-key "split-window-below")
+  "wd" '(delete-window :which-key "delete-window")
+  "wD" '(delete-other-windows :which-key "delete-other-windows")
+  "wh" '(windmove-left :which-key "windmove-left") ;; vim like window movement
+  "wj" '(windmove-down :which-key "windmove-down")
+  "wk" '(windmove-up :which-key "windmove-up")
+  "wl" '(windmove-right :which-key "windmove-right")
+  "ot" '(vterm-other-window :which-key "vterm-other-window")
+  "oT" '(vterm :which-key "vterm")
+)
 
 (use-package hydra)
 

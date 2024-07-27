@@ -68,7 +68,7 @@
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init))
+  (evil-collection-init)) ;; init with either config or do this for all packages (vterm, calendar, etc.)
 (use-package evil-tutor)
 
 ;; let C-u be scorll

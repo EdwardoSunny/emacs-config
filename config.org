@@ -83,6 +83,8 @@
 #+begin_src emacs-lisp
 (use-package vterm
     :ensure t)
+(setq shell-file-name "/bin/fish"
+      vterm-max-scrollback 5000)
 #+end_src
 
 ** Load Which Key
@@ -151,6 +153,14 @@
     )
 #+end_src
 
+** Zoom
+#+begin_src emacs-lisp
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+#+end_src
+
 * Appearance
 ** Theme
 #+begin_src emacs-lisp
@@ -183,15 +193,15 @@
 #+begin_src emacs-lisp
     (set-face-attribute 'default nil
       :font "Ubuntu"
-      :height 110
+      :height 120
       :weight 'medium)
     (set-face-attribute 'variable-pitch nil
       :font "Ubuntu"
-      :height 120
+      :height 130
       :weight 'medium)
     (set-face-attribute 'fixed-pitch nil
       :font "Ubuntu"
-      :height 110
+      :height 120
       :weight 'medium)
     ;; Makes commented text and keywords italics.
     ;; This is working in emacsclient but not emacs.
@@ -209,3 +219,4 @@
   ;; changes certain keywords to symbols, such as lamda!
    (setq global-prettify-symbols-mode t)
 #+end_src
+

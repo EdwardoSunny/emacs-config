@@ -68,6 +68,8 @@
 
 (use-package vterm
     :ensure t)
+(setq shell-file-name "/bin/fish"
+      vterm-max-scrollback 5000)
 
 (use-package which-key
   :init
@@ -128,6 +130,11 @@
 )
   )
 
+(global-set-key (kbd "C-=") 'text-scale-increase)
+(global-set-key (kbd "C--") 'text-scale-decrease)
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (load-theme 'masked t)
 
@@ -145,15 +152,15 @@
 
 (set-face-attribute 'default nil
     :font "Ubuntu"
-    :height 110
+    :height 120
     :weight 'medium)
   (set-face-attribute 'variable-pitch nil
     :font "Ubuntu"
-    :height 120
+    :height 130
     :weight 'medium)
   (set-face-attribute 'fixed-pitch nil
     :font "Ubuntu"
-    :height 110
+    :height 120
     :weight 'medium)
   ;; Makes commented text and keywords italics.
   ;; This is working in emacsclient but not emacs.

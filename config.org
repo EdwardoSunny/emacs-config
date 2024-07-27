@@ -68,7 +68,6 @@
 (use-package evil-collection
   :after evil
   :config
-  (setq evil-collection-mode-list '(dashboard dired ibuffer))
   (evil-collection-init))
 (use-package evil-tutor)
 
@@ -207,6 +206,6 @@
 
 ** Theme
 #+begin_src emacs-lisp
-;; (load-file "~/.emacs.d/themes/masked-theme-source-code.el")
-(load-theme 'tango-dark t)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(load-theme 'masked t)
 #+end_src

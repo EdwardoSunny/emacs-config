@@ -56,7 +56,6 @@
 (use-package evil-collection
   :after evil
   :config
-  (setq evil-collection-mode-list '(dashboard dired ibuffer))
   (evil-collection-init))
 (use-package evil-tutor)
 
@@ -169,5 +168,5 @@
 ;; changes certain keywords to symbols, such as lamda!
  (setq global-prettify-symbols-mode t)
 
-;; (load-file "~/.emacs.d/themes/masked-theme-source-code.el")
-(load-theme 'tango-dark t)
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(load-theme 'masked t)

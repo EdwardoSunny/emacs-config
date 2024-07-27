@@ -63,59 +63,40 @@
 ;; let C-u be scorll
 (setq evil-want-C-u-scroll t)
 
-;; allow undo C-r like vim
-(evil-set-undo-system 'undo-redo)
+;; allow undo and redo like vim
+(use-package undo-fu)
+(setq evil-undo-system `undo-fu)
 
 (use-package vterm
     :ensure t)
 
-(setq visible-bell t)
-(menu-bar-mode -1) 
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-
-(column-number-mode)
-(setq display-line-numbers-type 'relative) 
-(global-display-line-numbers-mode)
-
-(set-face-attribute 'default nil
-  :font "Fira Sans"
-  :height 110
-  :weight 'medium)
-(set-face-attribute 'variable-pitch nil
-  :font "Noto Sans"
-  :height 120
-  :weight 'medium)
-(set-face-attribute 'fixed-pitch nil
-  :font "Fira Sans"
-  :height 110
-  :weight 'medium)
-;; Makes commented text and keywords italics.
-;; This is working in emacsclient but not emacs.
-;; Your font must have an italic face available.
-(set-face-attribute 'font-lock-comment-face nil
-  :slant 'italic)
-(set-face-attribute 'font-lock-keyword-face nil
-  :slant 'italic)
-
-;; Uncomment the following line if line spacing needs adjusting.
-(setq-default line-spacing 0.12)
-
-;; Needed if using emacsclient. Otherwise, your fonts will be smaller than expected.
-(add-to-list 'default-frame-alist '(font . "Source Code Pro-11"))
-;; changes certain keywords to symbols, such as lamda!
-(setq global-prettify-symbols-mode t)
+(use-package which-key
+  :init
+    (which-key-mode 1)
+  :config 
+  (setq which-key-side-window-location 'bottom
+        which-key-sort-order #'which-key-key-order-alpha
+        which-key-sort-uppercase-first nil
+        which-key-add-column-padding 1
+        which-key-max-display-columns nil
+        which-key-min-display-lines 6
+        which-key-side-window-slot -10
+        which-key-side-window-max-height 0.25
+        which-key-idle-delay 0.8
+        which-key-max-description-length 25
+        which-key-allow-imprecise-window-fit t
+        which-key-separator " → " ))
 
 (use-package general
     :config
     (general-evil-setup t)
 
     ;; set up SPC as global leader key
-    (general-create-definer edward/leader-keys
-      :states `(normal insert visual emacs)
-      :keymaps `override
-      :prefix "SPC" 
-      :global-prefix "M-SPC")
+
+(general-create-definer edward/leader-keys
+  :keymaps '(normal insert visual emacs)
+  :prefix "SPC"
+  :global-prefix "C-SPC")
 
     (edward/leader-keys
       ;; themes
@@ -147,3 +128,46 @@
       "oT" '(vterm :wk "vterm")
 )
   )
+
+(setq visible-bell nil)
+(menu-bar-mode -1) 
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+
+(set-frame-parameter (selected-frame) 'alpha '(85 . 85))
+(add-to-list 'default-frame-alist '(alpha . (85 . 85)))
+
+(column-number-mode)
+(setq display-line-numbers-type 'relative) 
+(global-display-line-numbers-mode)
+
+(set-face-attribute 'default nil
+    :font "Ubuntu"
+    :height 110
+    :weight 'medium)
+  (set-face-attribute 'variable-pitch nil
+    :font "Ubuntu"
+    :height 120
+    :weight 'medium)
+  (set-face-attribute 'fixed-pitch nil
+    :font "Ubuntu"
+    :height 110
+    :weight 'medium)
+  ;; Makes commented text and keywords italics.
+  ;; This is working in emacsclient but not emacs.
+  ;; Your font must have an italic face available.
+  (set-face-attribute 'font-lock-comment-face nil
+    :slant 'italic)
+  (set-face-attribute 'font-lock-keyword-face nil
+    :slant 'italic)
+
+  ;; Uncomment the following line if line spacing needs adjusting.
+  ;; (setq-default line-spacing 0.12)
+
+  ;; Needed if using emacsclient. Otherwise, your fonts will be smaller than expected.
+  ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
+;; changes certain keywords to symbols, such as lamda!
+ (setq global-prettify-symbols-mode t)
+
+;; (load-file "~/.emacs.d/themes/masked-theme-source-code.el")
+(load-theme 'tango-dark t)

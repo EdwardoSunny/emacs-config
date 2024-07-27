@@ -152,6 +152,12 @@
 #+end_src
 
 * Appearance
+** Theme
+#+begin_src emacs-lisp
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(load-theme 'masked t)
+#+end_src
+
 ** Minimize Clutter
 #+begin_src emacs-lisp
 (setq visible-bell nil)
@@ -202,10 +208,4 @@
     ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
   ;; changes certain keywords to symbols, such as lamda!
    (setq global-prettify-symbols-mode t)
-#+end_src
-
-** Theme
-#+begin_src emacs-lisp
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'masked t)
 #+end_src

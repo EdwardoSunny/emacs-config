@@ -1,2 +1,5 @@
-* Custom Emacs Config
-Exploring configuring Emacs from scratch. Mainly using it as a IDE and for notes writing
+* My Literate Emacs Config
+
+Couldn't really understand how to deal with bugs when I used Doom Emacs, so I decided to write my own literate config to learn how emacs really works. 
+
+Still work in progress.

@@ -56,7 +56,7 @@
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init))
+  (evil-collection-init)) ;; init with either config or do this for all packages (vterm, calendar, etc.)
 (use-package evil-tutor)
 
 ;; let C-u be scorll
@@ -128,6 +128,9 @@
 )
   )
 
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(load-theme 'masked t)
+
 (setq visible-bell nil)
 (menu-bar-mode -1) 
 (tool-bar-mode -1)
@@ -167,6 +170,3 @@
   ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
 ;; changes certain keywords to symbols, such as lamda!
  (setq global-prettify-symbols-mode t)
-
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'masked t)

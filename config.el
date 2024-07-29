@@ -52,20 +52,26 @@
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
-  (evil-mode))
+  (evil-mode)
+  :config
+  ;; allow undo and redo like vim
+  (use-package undo-fu)
+  (setq evil-undo-system `undo-fu)
+  
+  ;; let C-u be scroll
+  (setq evil-want-C-u-scroll t)
+  
+  ;; keybindings
+  (define-key evil-normal-state-map "p" 'vterm-yank)
+  (define-key evil-normal-state-map "P" 'vterm-yank))
+
 (use-package evil-collection
   :after evil
   :config
   (setq evil-collection-mode-list '(dashboard dired ibuffer))
   (evil-collection-init))
+
 (use-package evil-tutor)
-
-  ;; let C-u be scorll
-  (setq evil-want-C-u-scroll t)
-
-  ;; allow undo and redo like vim
-  (use-package undo-fu)
-  (setq evil-undo-system `undo-fu)
 
 (use-package vterm
     :ensure t)
@@ -378,10 +384,6 @@ any other key exits this function."
       (load-file user-init-file)
       (load-file user-init-file)
   )
-
-(global-set-key (kbd "C-v") 'vterm-yank)
-(define-key evil-normal-state-map (kbd "p") 'vterm-yank)
-(define-key evil-normal-state-map (kbd "P") 'vterm-yank)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)

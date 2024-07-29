@@ -15,6 +15,7 @@
   - [[#load-which-key][Load Which Key]]
   - [[#load-ivy][Load Ivy]]
   - [[#buffer-move][Buffer Move]]
+  - [[#projectile][Projectile]]
 - [[#ide-set-up][IDE Set up]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
@@ -26,6 +27,7 @@
   - [[#relative-line-numbers][Relative Line Numbers]]
   - [[#font][Font]]
   - [[#all-the-icons][All the Icons]]
+  - [[#dashboard][Dashboard]]
 - [[#org-mode][Org Mode]]
   - [[#toc][TOC]]
   - [[#org-bullets][Org Bullets]]
@@ -92,14 +94,13 @@
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
+  ;; let C-u be scroll
+  (setq evil-want-C-u-scroll t)
   (evil-mode)
   :config
   ;; Allow undo and redo like vim
   (use-package undo-fu)
-  (setq evil-undo-system `undo-fu)
-  
-  ;; let C-u be scroll
-  (setq evil-want-C-u-scroll t)
+  (setq evil-undo-system `undo-fu) 
 
   ;; Custom function to set keybindings for vterm and other buffers
   (defun my-setup-evil-keybindings ()
@@ -114,7 +115,8 @@
         (define-key evil-normal-state-map "P" 'evil-paste-before))))
 
   ;; Add hook to run our custom setup function when switching buffers
-  (add-hook 'post-command-hook 'my-setup-evil-keybindings))
+  (add-hook 'post-command-hook 'my-setup-evil-keybindings) 
+)
 
 (use-package evil-collection
   :after evil
@@ -136,24 +138,24 @@ Use vterm to emulate
 
 ** Vterm Toggle
 #+begin_src emacs-lisp
-(use-package vterm-toggle
-  :after vterm
-  :config
-  (setq vterm-toggle-fullscreen-p nil)
-  (setq vterm-toggle-scope 'project)
-  (add-to-list 'display-buffer-alist
-               '((lambda (buffer-or-name _)
-                     (let ((buffer (get-buffer buffer-or-name)))
-                       (with-current-buffer buffer
-                         (or (equal major-mode 'vterm-mode)
-                             (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-                  (display-buffer-reuse-window display-buffer-at-bottom)
-                  ;;(display-buffer-reuse-window display-buffer-in-direction)
-                  ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                  ;;(direction . bottom)
-                  ;;(dedicated . t) ;dedicated is supported in emacs27
-                  (reusable-frames . visible)
-                  (window-height . 0.3))))
+  (use-package vterm-toggle
+    :after vterm
+    :config
+    (setq vterm-toggle-fullscreen-p nil)
+    ;; (setq vterm-toggle-scope 'project)
+    (add-to-list 'display-buffer-alist
+                 '((lambda (buffer-or-name _)
+                       (let ((buffer (get-buffer buffer-or-name)))
+                         (with-current-buffer buffer
+                           (or (equal major-mode 'vterm-mode)
+                               (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                    (display-buffer-reuse-window display-buffer-at-bottom)
+                    ;;(display-buffer-reuse-window display-buffer-in-direction)
+                    ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                    ;;(direction . bottom)
+                    ;;(dedicated . t) ;dedicated is supported in emacs27
+                    (reusable-frames . visible)
+                    (window-height . 0.3))))
 #+end_src
 
 ** Load Which Key
@@ -390,6 +392,14 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
   ;; (provide 'buffer-move)
 #+end_src
 
+** Projectile
+#+begin_src emacs-lisp
+(use-package projectile
+    :config
+(projectile-mode 1)
+)
+#+end_src
+
 * IDE Set up
 Configuration for using emacs as a IDE
 
@@ -540,6 +550,30 @@ Configuration for using emacs as a IDE
 (use-package all-the-icons-dired
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
 )
+#+end_src
+
+** Dashboard
+#+begin_src emacs-lisp
+  (use-package dashboard
+    :ensure t 
+    :init
+    (setq initial-buffer-choice 'dashboard-open)
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-center-content t) ;; set to 't' for centered content
+    (setq dashboard-banner-logo-title "\"As long as the Sun, the Moon, and the Earth exist, everything will be all right.\" (Yui Ikari)")
+    ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+    (setq dashboard-startup-banner "/home/edwardsun/.emacs.d/nerv.png")  ;; use custom image as banner
+    (setq dashboard-items '((recents . 5)
+                            ;; (agenda . 5 )
+                            (bookmarks . 3)
+                            ;; (projects . 3)
+                            (registers . 3)))
+    :custom
+    (dashboard-modify-heading-icons '((recents . "file-text")
+                                      (bookmarks . "book")))
+    :config
+    (dashboard-setup-startup-hook))
 #+end_src
 
 * Org Mode

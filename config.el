@@ -52,14 +52,13 @@
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
+  ;; let C-u be scroll
+  (setq evil-want-C-u-scroll t)
   (evil-mode)
   :config
   ;; Allow undo and redo like vim
   (use-package undo-fu)
-  (setq evil-undo-system `undo-fu)
-  
-  ;; let C-u be scroll
-  (setq evil-want-C-u-scroll t)
+  (setq evil-undo-system `undo-fu) 
 
   ;; Custom function to set keybindings for vterm and other buffers
   (defun my-setup-evil-keybindings ()
@@ -74,7 +73,8 @@
         (define-key evil-normal-state-map "P" 'evil-paste-before))))
 
   ;; Add hook to run our custom setup function when switching buffers
-  (add-hook 'post-command-hook 'my-setup-evil-keybindings))
+  (add-hook 'post-command-hook 'my-setup-evil-keybindings) 
+)
 
 (use-package evil-collection
   :after evil
@@ -93,7 +93,7 @@
   :after vterm
   :config
   (setq vterm-toggle-fullscreen-p nil)
-  (setq vterm-toggle-scope 'project)
+  ;; (setq vterm-toggle-scope 'project)
   (add-to-list 'display-buffer-alist
                '((lambda (buffer-or-name _)
                      (let ((buffer (get-buffer buffer-or-name)))
@@ -332,6 +332,11 @@ any other key exits this function."
 
 ;; (provide 'buffer-move)
 
+(use-package projectile
+    :config
+(projectile-mode 1)
+)
+
 (use-package general
         :config
         (general-evil-setup t)
@@ -452,6 +457,27 @@ any other key exits this function."
 (use-package all-the-icons-dired
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
 )
+
+(use-package dashboard
+  :ensure t 
+  :init
+  (setq initial-buffer-choice 'dashboard-open)
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-center-content t) ;; set to 't' for centered content
+  (setq dashboard-banner-logo-title "\"As long as the Sun, the Moon, and the Earth exist, everything will be all right.\" (Yui Ikari)")
+  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  (setq dashboard-startup-banner "/home/edwardsun/.emacs.d/nerv.png")  ;; use custom image as banner
+  (setq dashboard-items '((recents . 5)
+                          ;; (agenda . 5 )
+                          (bookmarks . 3)
+                          ;; (projects . 3)
+                          (registers . 3)))
+  :custom
+  (dashboard-modify-heading-icons '((recents . "file-text")
+                                    (bookmarks . "book")))
+  :config
+  (dashboard-setup-startup-hook))
 
 (use-package toc-org
     :commands toc-org-enable

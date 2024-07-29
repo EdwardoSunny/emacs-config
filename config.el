@@ -465,7 +465,7 @@ any other key exits this function."
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
   (setq dashboard-center-content t) ;; set to 't' for centered content
-  (setq dashboard-banner-logo-title "\"As long as the Sun, the Moon, and the Earth exist, everything will be all right.\" (Yui Ikari)")
+  (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
   ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
   (setq dashboard-startup-banner "/home/edwardsun/.emacs.d/nerv.png")  ;; use custom image as banner
   (setq dashboard-items '((recents . 5)

@@ -3,9 +3,9 @@
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
 (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1
-                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                              :build (:not elpaca--activate-package)))
+  			    :ref nil :depth 1
+  			    :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+  			    :build (:not elpaca--activate-package)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
        (build (expand-file-name "elpaca/" elpaca-builds-directory))
        (order (cdr elpaca-order))
@@ -15,20 +15,20 @@
     (make-directory repo t)
     (when (< emacs-major-version 28) (require 'subr-x))
     (condition-case-unless-debug err
-        (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                 ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                 ,@(when-let ((depth (plist-get order :depth)))
-                                                     (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                 ,(plist-get order :repo) ,repo))))
-                 ((zerop (call-process "git" nil buffer t "checkout"
-                                       (or (plist-get order :ref) "--"))))
-                 (emacs (concat invocation-directory invocation-name))
-                 ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                       "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                 ((require 'elpaca))
-                 ((elpaca-generate-autoloads "elpaca" repo)))
-            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-          (error "%s" (with-current-buffer buffer (buffer-string))))
+      (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+  	       ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+  					       ,@(when-let ((depth (plist-get order :depth)))
+  						   (list (format "--depth=%d" depth) "--no-single-branch"))
+  					       ,(plist-get order :repo) ,repo))))
+  	       ((zerop (call-process "git" nil buffer t "checkout"
+  				     (or (plist-get order :ref) "--"))))
+  	       (emacs (concat invocation-directory invocation-name))
+  	       ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+  				     "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+  	       ((require 'elpaca))
+  	       ((elpaca-generate-autoloads "elpaca" repo)))
+  	  (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+  	(error "%s" (with-current-buffer buffer (buffer-string))))
       ((error) (warn "%s" err) (delete-directory repo 'recursive))))
   (unless (require 'elpaca-autoloads nil t)
     (require 'elpaca)
@@ -76,59 +76,79 @@
     (which-key-mode 1)
   :config 
   (setq which-key-side-window-location 'bottom
-        which-key-sort-order #'which-key-key-order-alpha
-        which-key-sort-uppercase-first nil
-        which-key-add-column-padding 1
-        which-key-max-display-columns nil
-        which-key-min-display-lines 6
-        which-key-side-window-slot -10
-        which-key-side-window-max-height 0.25
-        which-key-idle-delay 0.8
-        which-key-max-description-length 25
-        which-key-allow-imprecise-window-fit t
-        which-key-separator " → " ))
+      which-key-sort-order #'which-key-key-order-alpha
+      which-key-sort-uppercase-first nil
+      which-key-add-column-padding 1
+      which-key-max-display-columns nil
+      which-key-min-display-lines 6
+      which-key-side-window-slot -10
+      which-key-side-window-max-height 0.25
+      which-key-idle-delay 0.8
+      which-key-max-description-length 25
+      which-key-allow-imprecise-window-fit t
+      which-key-separator " → " ))
 
 (use-package general
-    :config
-    (general-evil-setup t)
+      :config
+      (general-evil-setup t)
 
-    ;; set up SPC as global leader key
+      ;; set up SPC as global leader key
 
-(general-create-definer edward/leader-keys
-  :keymaps '(normal insert visual emacs)
-  :prefix "SPC"
-  :global-prefix "C-SPC")
+  (general-create-definer edward/leader-keys
+    :keymaps '(normal insert visual emacs)
+    :prefix "SPC"
+    :global-prefix "C-SPC")
 
     (edward/leader-keys
-      ;; themes
-      "t"  '(:ignore t :wk "toggles")
-      "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-      ;; dired
-      "." '(dired :wk "dired")
-      ;; search
-      "/" '(swiper :wk "swiper search")
-      ;; windows
-      "wv" '(split-window-right :wk "split-window-right")
-      "ws" '(split-window-below :wk "split-window-below")
-      "wd" '(delete-window :wk "delete-window")
-      "wD" '(delete-other-windows :wk "delete-other-windows")
-      "wh" '(windmove-left :wk "windmove-left") ;; vim like window movement
-      "wj" '(windmove-down :wk "windmove-down")
-      "wk" '(windmove-up :wk "windmove-up")
-      "wl" '(windmove-right :wk "windmove-right")
-      ;; buffers
-      "," '(list-buffers :wk "list-buffers")
-      "b" `(:ignore t :wk "buffer")
-      "bb" `(switch-to-buffer :wk "switch buffer")
-      "bk" `(kill-this-buffer :wk "kill this buffer")
-      "bn" `(next-buffer :wk "next buffer")
-      "bp" `(previous-buffer :wk "previous buffer")
-      "br" `(revert-buffer :wk "reload buffer")
-      ;; terminal  
-      "ot" '(vterm-other-window :wk "vterm-other-window")
-      "oT" '(vterm :wk "vterm")
-)
+    ;; themes
+        "t"  '(:ignore t :wk "toggles")
+        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+        ;; files 
+        "." '(find-file :wk "dired")
+    ;; comment
+    "TAB TAB" '(comment-line :wk "comment lines")
+        ;; search
+        "/" '(swiper :wk "swiper search")
+        ;; windows
+        "wv" '(split-window-right :wk "split-window-right")
+        "ws" '(split-window-below :wk "split-window-below")
+        "wd" '(delete-window :wk "delete-window")
+        "wD" '(delete-other-windows :wk "delete-other-windows")
+        "wh" '(windmove-left :wk "windmove-left") ;; vim like window movement
+        "wj" '(windmove-down :wk "windmove-down")
+        "wk" '(windmove-up :wk "windmove-up")
+        "wl" '(windmove-right :wk "windmove-right")
+        ;; buffers
+        "," '(list-buffers :wk "list-buffers")
+        "b" `(:ignore t :wk "buffer")
+        "bb" `(switch-to-buffer :wk "switch buffer")
+        "bi" `(ibuffer :wk "interactive list buffer")
+        "bk" `(kill-this-buffer :wk "kill this buffer")
+        "bn" `(next-buffer :wk "next buffer")
+        "bp" `(previous-buffer :wk "previous buffer")
+        "br" `(revert-buffer :wk "reload buffer")
+        ;; terminal  
+        "ot" '(vterm-other-window :wk "vterm-other-window")
+        "oT" '(vterm :wk "vterm")
+    ;; evalute
+    "e" '(:ignore t :wk "evaluate")
+        "eb" '(eval-buffer :wk "evaluate elisp in buffer") ;; if working in elisp ONLY file
+        "ed" '(eval-defun :wk "evaluate defun containing or after point")
+        "ee" '(eval-expression :wk "evaluate and elisp expression")
+        "el" '(eval-last-sexp :wk "evaluate elisp expression before point")
+        "er" '(eval-region :wk "evaluate elisp in region")
+    ;; evalute
+    "h" '(:ignore t :wk "help")
+        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+        "hv" '(describe-variable :wk "describe variable")
+        "h r r" '(reload-init-file :wk "reload emacs config")
   )
+ )
+ (defun reload-init-file()
+    (interactive)
+    (load-file user-init-file)
+    (load-file user-init-file)
+)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -186,3 +206,7 @@
 (add-hook `org-mode-hook `org-indent-mode)
 (use-package org-bullets)
 (add-hook `org-mode-hook (lambda () (org-bullets-mode 1)))
+
+(electric-indent-mode -1)
+
+(require `org-tempo)

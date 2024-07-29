@@ -4,4 +4,6 @@ elpaca/
 straight/
 *~
 *#
-recentf/
+recentf
+projectile*
+eshell/

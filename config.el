@@ -316,70 +316,68 @@ any other key exits this function."
 ;; (provide 'buffer-move)
 
 (use-package general
-            :config
-            (general-evil-setup t)
+        :config
+        (general-evil-setup t)
 
-    (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-            ;; buffers
-             "b b"   '(ibuffer :which-key "ibuffer")
-             "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-             "b d"   '(kill-current-buffer :which-key "kill current buffer")
-             "b n"   '(next-buffer :which-key "next buffer")
-             "b p"   '(previous-buffer :which-key "previous buffer")
-             "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-             "b D"   '(kill-buffer :which-key "kill buffer")
-            ;; search 
-              "/" '(swiper :wk "swiper search")
-            ;; comment 
-              "TAB TAB" '(comment-line :wk "comment lines")
-            ;; help 
-              "h" '(:ignore t :wk "help")
-              "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-              "hv" '(describe-variable :wk "describe variable")
-              "h r r" '(reload-init-file :wk "reload emacs config")
-            ;; themes 
-              "t"  '(:ignore t :wk "toggles")
-              "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-            ;; file navigation 
-           "."     '(find-file :which-key "find file")
-           "ff"   '(find-file :which-key "find file")
-           "fr"   '(counsel-recentf :which-key "recent files")
-           "fs"   '(save-buffer :which-key "save file")
-           "fu"   '(sudo-edit-find-file :which-key "sudo find file")
-           "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
-           "fC"   '(copy-file :which-key "copy file")
-           "fD"   '(delete-file :which-key "delete file")
-           "fR"   '(rename-file :which-key "rename file")
-           "fS"   '(write-file :which-key "save file as...")
-           "fU"   '(sudo-edit :which-key "sudo edit file")
-            ;; windows 
-            "wv" '(evil-window-vsplit :wk "split-window-right")
-            "ws" '(evil-window-split  :wk "split-window-below")
-            "wd" '(evil-window-delete :wk "delete-window")
-            "wD" '(delete-other-windows :wk "delete-other-windows")
-            ;; navigation 
-            "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
-            "wj" '(evil-window-down :wk "windmove-down")
-            "wk" '(evil-window-up :wk "windmove-up")
-            "wl" '(evil-window-right :wk "windmove-right")
-            "ww" '(evil-window-next :wk "windmove-next")
-            ;; window move
-            "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
-            "wJ" '(buf-move-down :wk "move window down")
-            "wK" '(buf-move-up :wk "move window up")
-            "wL" '(buf-move-right :wk "windmove-right")
-            ;; terminals 
-            "ot" '(vterm-toggle :wk "toggle vterm")
-            ;; "oT" '(vterm :wk "vterm")
-            )
-      )
-       (defun reload-init-file()
-          (interactive)
-          (load-file user-init-file)
-          (load-file user-init-file)
-      )
-(evil-define-key 'normal vterm-mode-map (kbd "P") 'vterm-yank)
-(evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+        ;; buffers
+         "b b"   '(ibuffer :which-key "ibuffer")
+         "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+         "b d"   '(kill-current-buffer :which-key "kill current buffer")
+         "b n"   '(next-buffer :which-key "next buffer")
+         "b p"   '(previous-buffer :which-key "previous buffer")
+         "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+         "b D"   '(kill-buffer :which-key "kill buffer")
+        ;; search 
+          "/" '(swiper :wk "swiper search")
+        ;; comment 
+          "TAB TAB" '(comment-line :wk "comment lines")
+        ;; help 
+          "h" '(:ignore t :wk "help")
+          "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+          "hv" '(describe-variable :wk "describe variable")
+          "h r r" '(reload-init-file :wk "reload emacs config")
+        ;; themes 
+          "t"  '(:ignore t :wk "toggles")
+          "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+        ;; file navigation 
+       "."     '(find-file :which-key "find file")
+       "ff"   '(find-file :which-key "find file")
+       "fr"   '(counsel-recentf :which-key "recent files")
+       "fs"   '(save-buffer :which-key "save file")
+       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+       "fC"   '(copy-file :which-key "copy file")
+       "fD"   '(delete-file :which-key "delete file")
+       "fR"   '(rename-file :which-key "rename file")
+       "fS"   '(write-file :which-key "save file as...")
+       "fU"   '(sudo-edit :which-key "sudo edit file")
+        ;; windows 
+        "wv" '(evil-window-vsplit :wk "split-window-right")
+        "ws" '(evil-window-split  :wk "split-window-below")
+        "wd" '(evil-window-delete :wk "delete-window")
+        "wD" '(delete-other-windows :wk "delete-other-windows")
+        ;; navigation 
+        "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+        "wj" '(evil-window-down :wk "windmove-down")
+        "wk" '(evil-window-up :wk "windmove-up")
+        "wl" '(evil-window-right :wk "windmove-right")
+        "ww" '(evil-window-next :wk "windmove-next")
+        ;; window move
+        "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
+        "wJ" '(buf-move-down :wk "move window down")
+        "wK" '(buf-move-up :wk "move window up")
+        "wL" '(buf-move-right :wk "windmove-right")
+        ;; terminals 
+        "ot" '(vterm-toggle :wk "toggle vterm")
+        ;; "oT" '(vterm :wk "vterm")
+        )
+  )
+   (defun reload-init-file()
+      (interactive)
+      (load-file user-init-file)
+      (load-file user-init-file)
+  )
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -387,7 +385,7 @@ any other key exits this function."
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'masked t)
+(load-theme 'dracula t)
 
 (setq visible-bell nil)
 (menu-bar-mode -1) 

@@ -442,9 +442,6 @@ Configuration for using emacs as a IDE
           (load-file user-init-file)
           (load-file user-init-file)
       )
-(evil-define-key 'normal vterm-mode-map (kbd "P") 'vterm-yank)
-(evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
-
 
 #+end_src
 
@@ -460,7 +457,7 @@ Configuration for using emacs as a IDE
 ** Theme
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-  (load-theme 'masked t)
+  (load-theme 'dracula t)
 #+end_src
 
 ** Minimize Clutter

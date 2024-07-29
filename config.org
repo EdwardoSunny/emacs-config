@@ -443,6 +443,11 @@ Configuration for using emacs as a IDE
           (load-file user-init-file)
       )
 
+    (global-set-key (kbd "C-v") 'vterm-yank)
+    (define-key evil-normal-state-map (kbd "p") 'vterm-yank)
+    (define-key evil-normal-state-map (kbd "P") 'vterm-yank)
+
+
 #+end_src
 
 ** Zoom

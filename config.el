@@ -379,6 +379,10 @@ any other key exits this function."
       (load-file user-init-file)
   )
 
+(global-set-key (kbd "C-v") 'vterm-yank)
+(define-key evil-normal-state-map (kbd "p") 'vterm-yank)
+(define-key evil-normal-state-map (kbd "P") 'vterm-yank)
+
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)

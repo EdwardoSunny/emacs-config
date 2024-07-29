@@ -47,23 +47,34 @@
 (elpaca-wait)
 
 (use-package evil
-  :init      ;; tweak evil's configuration before loading it
+  :init
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
   (setq evil-want-keybinding nil)
   (setq evil-vsplit-window-right t)
   (setq evil-split-window-below t)
   (evil-mode)
   :config
-  ;; allow undo and redo like vim
+  ;; Allow undo and redo like vim
   (use-package undo-fu)
   (setq evil-undo-system `undo-fu)
   
   ;; let C-u be scroll
   (setq evil-want-C-u-scroll t)
-  
-  ;; keybindings
-  (define-key evil-normal-state-map "p" 'vterm-yank)
-  (define-key evil-normal-state-map "P" 'vterm-yank))
+
+  ;; Custom function to set keybindings for vterm and other buffers
+  (defun my-setup-evil-keybindings ()
+    (if (derived-mode-p 'vterm-mode)
+        (progn
+          ;; In vterm, use vterm-yank for p and P
+          (define-key evil-normal-state-map "p" 'vterm-yank)
+          (define-key evil-normal-state-map "P" 'vterm-yank))
+      (progn
+        ;; In other buffers, use the default paste behavior
+        (define-key evil-normal-state-map "p" 'evil-paste-after)
+        (define-key evil-normal-state-map "P" 'evil-paste-before))))
+
+  ;; Add hook to run our custom setup function when switching buffers
+  (add-hook 'post-command-hook 'my-setup-evil-keybindings))
 
 (use-package evil-collection
   :after evil

@@ -4,6 +4,25 @@
 #+STARTUP: showeverything
 #+OPTION: toc:2 
 
+* Table of Contents :toc:
+- [[#important-programs-to-load-first][Important Programs to Load First]]
+  - [[#elpaca-package-manager][Elpaca Package Manager]]
+  - [[#load-evil-mode][Load Evil Mode]]
+  - [[#vterm-emulator][Vterm Emulator]]
+  - [[#load-which-key][Load Which Key]]
+- [[#key-bindings][Key Bindings]]
+  - [[#generalel-keybindings][General.el Keybindings]]
+  - [[#zoom][Zoom]]
+- [[#appearance][Appearance]]
+  - [[#theme][Theme]]
+  - [[#minimize-clutter][Minimize Clutter]]
+  - [[#transparent-background][Transparent Background]]
+  - [[#relative-line-numbers][Relative Line Numbers]]
+  - [[#font][Font]]
+- [[#org-mode][Org Mode]]
+  - [[#toc][TOC]]
+  - [[#org-bullets][Org Bullets]]
+
 * Important Programs to Load First
 ** Elpaca Package Manager
 #+begin_src emacs-lisp
@@ -178,15 +197,15 @@
 
 ** Transparent Background 
 #+begin_src emacs-lisp
-(set-frame-parameter (selected-frame) 'alpha '(85 . 85))
-(add-to-list 'default-frame-alist '(alpha . (85 . 85)))
+    (set-frame-parameter (selected-frame) 'alpha '(85 . 85))
+    (add-to-list 'default-frame-alist '(alpha . (85 . 85)))
 #+end_src
 
 ** Relative Line Numbers
 #+begin_src emacs-lisp
-(column-number-mode)
-(setq display-line-numbers-type 'relative) 
-(global-display-line-numbers-mode)
+    (column-number-mode)
+    (setq display-line-numbers-type 'relative) 
+    (global-display-line-numbers-mode)
 #+end_src
 
 ** Font
@@ -220,3 +239,19 @@
    (setq global-prettify-symbols-mode t)
 #+end_src
 
+* Org Mode
+** TOC
+#+begin_src emacs-lisp
+    (use-package toc-org
+	:commands toc-org-enable
+	:init (add-hook `org-mode-hook `toc-org-enable)
+    )
+#+end_src 
+
+** Org Bullets
+Have pretty org mode bullets instead of just asteriks
+#+begin_src emacs-lisp
+    (add-hook `org-mode-hook `org-indent-mode)
+    (use-package org-bullets)
+    (add-hook `org-mode-hook (lambda () (org-bullets-mode 1)))
+#+end_src 

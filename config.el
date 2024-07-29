@@ -177,3 +177,12 @@
   ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
 ;; changes certain keywords to symbols, such as lamda!
  (setq global-prettify-symbols-mode t)
+
+(use-package toc-org
+    :commands toc-org-enable
+    :init (add-hook `org-mode-hook `toc-org-enable)
+)
+
+(add-hook `org-mode-hook `org-indent-mode)
+(use-package org-bullets)
+(add-hook `org-mode-hook (lambda () (org-bullets-mode 1)))

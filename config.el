@@ -56,15 +56,16 @@
 (use-package evil-collection
   :after evil
   :config
-  (evil-collection-init)) ;; init with either config or do this for all packages (vterm, calendar, etc.)
+  (setq evil-collection-mode-list '(dashboard dired ibuffer))
+  (evil-collection-init))
 (use-package evil-tutor)
 
-;; let C-u be scorll
-(setq evil-want-C-u-scroll t)
+  ;; let C-u be scorll
+  (setq evil-want-C-u-scroll t)
 
-;; allow undo and redo like vim
-(use-package undo-fu)
-(setq evil-undo-system `undo-fu)
+  ;; allow undo and redo like vim
+  (use-package undo-fu)
+  (setq evil-undo-system `undo-fu)
 
 (use-package vterm
     :ensure t)
@@ -88,28 +89,67 @@
       which-key-allow-imprecise-window-fit t
       which-key-separator " → " ))
 
+(use-package counsel
+  :after ivy
+  :config (counsel-mode))
+(use-package ivy
+  :defer 0.1
+  :diminish
+  :bind
+  (("C-c C-r" . ivy-resume)
+   ("C-x B" . ivy-switch-buffer-other-window))
+  :custom
+  (setq ivy-count-format "(%d/%d) ")
+  (setq ivy-use-virtual-buffers t)
+  (setq enable-recursive-minibuffers t)
+  :config
+  (ivy-mode))
+(use-package ivy-rich
+  :after ivy
+  :custom
+  (ivy-virtual-abbreviate 'full
+   ivy-rich-switch-buffer-align-virtual-buffer t
+   ivy-rich-path-style 'abbrev)
+  :config
+  (ivy-set-display-transformer 'ivy-switch-buffer
+                               'ivy-rich-switch-buffer-transformer)
+  (ivy-rich-mode 1)) ;; this gets us descriptions in M-x.
+(use-package swiper
+  :after ivy
+  :bind (("C-s" . swiper)
+         ("C-r" . swiper)))
+
 (use-package general
-      :config
-      (general-evil-setup t)
+        :config
+        (general-evil-setup t)
 
-      ;; set up SPC as global leader key
-
-  (general-create-definer edward/leader-keys
-    :keymaps '(normal insert visual emacs)
-    :prefix "SPC"
-    :global-prefix "C-SPC")
-
-    (edward/leader-keys
-    ;; themes
-        "t"  '(:ignore t :wk "toggles")
-        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-        ;; files 
-        "." '(find-file :wk "dired")
-    ;; comment
-    "TAB TAB" '(comment-line :wk "comment lines")
-        ;; search
-        "/" '(swiper :wk "swiper search")
-        ;; windows
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+         "b b"   '(ibuffer :which-key "ibuffer")
+         "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+         "b d"   '(kill-current-buffer :which-key "kill current buffer")
+         "b n"   '(next-buffer :which-key "next buffer")
+         "b p"   '(previous-buffer :which-key "previous buffer")
+         "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+         "b D"   '(kill-buffer :which-key "kill buffer")
+          "/" '(swiper :wk "swiper search")
+          "TAB TAB" '(comment-line :wk "comment lines")
+          "h" '(:ignore t :wk "help")
+          "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+          "hv" '(describe-variable :wk "describe variable")
+          "h r r" '(reload-init-file :wk "reload emacs config")
+          "t"  '(:ignore t :wk "toggles")
+          "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+       "."     '(find-file :which-key "find file")
+       "ff"   '(find-file :which-key "find file")
+       "fr"   '(counsel-recentf :which-key "recent files")
+       "fs"   '(save-buffer :which-key "save file")
+       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+       "fC"   '(copy-file :which-key "copy file")
+       "fD"   '(delete-file :which-key "delete file")
+       "fR"   '(rename-file :which-key "rename file")
+       "fS"   '(write-file :which-key "save file as...")
+       "fU"   '(sudo-edit :which-key "sudo edit file")
         "wv" '(split-window-right :wk "split-window-right")
         "ws" '(split-window-below :wk "split-window-below")
         "wd" '(delete-window :wk "delete-window")
@@ -118,37 +158,15 @@
         "wj" '(windmove-down :wk "windmove-down")
         "wk" '(windmove-up :wk "windmove-up")
         "wl" '(windmove-right :wk "windmove-right")
-        ;; buffers
-        "," '(list-buffers :wk "list-buffers")
-        "b" `(:ignore t :wk "buffer")
-        "bb" `(switch-to-buffer :wk "switch buffer")
-        "bi" `(ibuffer :wk "interactive list buffer")
-        "bk" `(kill-this-buffer :wk "kill this buffer")
-        "bn" `(next-buffer :wk "next buffer")
-        "bp" `(previous-buffer :wk "previous buffer")
-        "br" `(revert-buffer :wk "reload buffer")
-        ;; terminal  
         "ot" '(vterm-other-window :wk "vterm-other-window")
         "oT" '(vterm :wk "vterm")
-    ;; evalute
-    "e" '(:ignore t :wk "evaluate")
-        "eb" '(eval-buffer :wk "evaluate elisp in buffer") ;; if working in elisp ONLY file
-        "ed" '(eval-defun :wk "evaluate defun containing or after point")
-        "ee" '(eval-expression :wk "evaluate and elisp expression")
-        "el" '(eval-last-sexp :wk "evaluate elisp expression before point")
-        "er" '(eval-region :wk "evaluate elisp in region")
-    ;; evalute
-    "h" '(:ignore t :wk "help")
-        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-        "hv" '(describe-variable :wk "describe variable")
-        "h r r" '(reload-init-file :wk "reload emacs config")
+        )
   )
- )
- (defun reload-init-file()
-    (interactive)
-    (load-file user-init-file)
-    (load-file user-init-file)
-)
+   (defun reload-init-file()
+      (interactive)
+      (load-file user-init-file)
+      (load-file user-init-file)
+  )
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -197,6 +215,15 @@
   ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
 ;; changes certain keywords to symbols, such as lamda!
  (setq global-prettify-symbols-mode t)
+
+(use-package all-the-icons
+    :ensure t
+    :if (display-graphic-p)
+)
+
+(use-package all-the-icons-dired
+    :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
+)
 
 (use-package toc-org
     :commands toc-org-enable

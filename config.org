@@ -11,9 +11,11 @@
   - [[#elpaca-package-manager][Elpaca Package Manager]]
   - [[#load-evil-mode][Load Evil Mode]]
   - [[#vterm-emulator][Vterm Emulator]]
+  - [[#vterm-toggle][Vterm Toggle]]
   - [[#load-which-key][Load Which Key]]
   - [[#load-ivy][Load Ivy]]
   - [[#buffer-move][Buffer Move]]
+- [[#ide-set-up][IDE Set up]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
   - [[#zoom][Zoom]]
@@ -106,12 +108,35 @@
   (setq evil-undo-system `undo-fu)
 #+end_src
 
-** Vterm Emulator
+** Vterm Emulator 
+Use vterm to emulate
 #+begin_src emacs-lisp
   (use-package vterm
       :ensure t)
   (setq shell-file-name "/bin/fish"
         vterm-max-scrollback 5000)
+#+end_src
+
+** Vterm Toggle
+#+begin_src emacs-lisp
+(use-package vterm-toggle
+  :after vterm
+  :config
+  (setq vterm-toggle-fullscreen-p nil)
+  (setq vterm-toggle-scope 'project)
+  (add-to-list 'display-buffer-alist
+               '((lambda (buffer-or-name _)
+                     (let ((buffer (get-buffer buffer-or-name)))
+                       (with-current-buffer buffer
+                         (or (equal major-mode 'vterm-mode)
+                             (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                  (display-buffer-reuse-window display-buffer-at-bottom)
+                  ;;(display-buffer-reuse-window display-buffer-in-direction)
+                  ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                  ;;(direction . bottom)
+                  ;;(dedicated . t) ;dedicated is supported in emacs27
+                  (reusable-frames . visible)
+                  (window-height . 0.3))))
 #+end_src
 
 ** Load Which Key
@@ -348,6 +373,9 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
   ;; (provide 'buffer-move)
 #+end_src
 
+* IDE Set up
+Configuration for using emacs as a IDE
+
 * Key Bindings
 ** General.el Keybindings
 #+begin_src emacs-lisp
@@ -388,24 +416,25 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
            "fR"   '(rename-file :which-key "rename file")
            "fS"   '(write-file :which-key "save file as...")
            "fU"   '(sudo-edit :which-key "sudo edit file")
-            ;; windows navigation 
-            "wv" '(split-window-right :wk "split-window-right")
-            "ws" '(split-window-below :wk "split-window-below")
-            "wd" '(delete-window :wk "delete-window")
+            ;; windows 
+            "wv" '(evil-window-vsplit :wk "split-window-right")
+            "ws" '(evil-window-split  :wk "split-window-below")
+            "wd" '(evil-window-delete :wk "delete-window")
             "wD" '(delete-other-windows :wk "delete-other-windows")
-            "wh" '(windmove-left :wk "windmove-left") ;; vim like window movement
-            "wj" '(windmove-down :wk "windmove-down")
-            "wk" '(windmove-up :wk "windmove-up")
-            "wl" '(windmove-right :wk "windmove-right")
+            ;; navigation 
+            "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+            "wj" '(evil-window-down :wk "windmove-down")
+            "wk" '(evil-window-up :wk "windmove-up")
+            "wl" '(evil-window-right :wk "windmove-right")
+            "ww" '(evil-window-next :wk "windmove-next")
             ;; window move
             "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
             "wJ" '(buf-move-down :wk "move window down")
             "wK" '(buf-move-up :wk "move window up")
             "wL" '(buf-move-right :wk "windmove-right")
-
             ;; terminals 
-            "ot" '(vterm-other-window :wk "vterm-other-window")
-            "oT" '(vterm :wk "vterm")
+            "ot" '(vterm-toggle :wk "toggle vterm")
+            ;; "oT" '(vterm :wk "vterm")
             )
       )
        (defun reload-init-file()
@@ -413,6 +442,9 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
           (load-file user-init-file)
           (load-file user-init-file)
       )
+(evil-define-key 'normal vterm-mode-map (kbd "P") 'vterm-yank)
+(evil-define-key 'normal vterm-mode-map (kbd "p") 'vterm-yank)
+
 
 #+end_src
 

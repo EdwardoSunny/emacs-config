@@ -16,7 +16,12 @@
   - [[#load-ivy][Load Ivy]]
   - [[#buffer-move][Buffer Move]]
   - [[#projectile][Projectile]]
+  - [[#diminish][Diminish]]
+  - [[#backups][Backups]]
 - [[#ide-set-up][IDE Set up]]
+  - [[#lsp-mode][LSP Mode]]
+  - [[#company][Company]]
+  - [[#flycheck][Flycheck]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
   - [[#zoom][Zoom]]
@@ -27,6 +32,7 @@
   - [[#relative-line-numbers][Relative Line Numbers]]
   - [[#font][Font]]
   - [[#all-the-icons][All the Icons]]
+  - [[#rainbow-mode][Rainbow Mode]]
   - [[#dashboard][Dashboard]]
 - [[#org-mode][Org Mode]]
   - [[#toc][TOC]]
@@ -160,22 +166,24 @@ Use vterm to emulate
 
 ** Load Which Key
 #+begin_src emacs-lisp
-  (use-package which-key
-    :init
-      (which-key-mode 1)
-    :config 
-    (setq which-key-side-window-location 'bottom
-  	which-key-sort-order #'which-key-key-order-alpha
-  	which-key-sort-uppercase-first nil
-  	which-key-add-column-padding 1
-  	which-key-max-display-columns nil
-  	which-key-min-display-lines 6
-  	which-key-side-window-slot -10
-  	which-key-side-window-max-height 0.25
-  	which-key-idle-delay 0.8
-  	which-key-max-description-length 25
-  	which-key-allow-imprecise-window-fit t
-  	which-key-separator " → " ))
+(use-package which-key
+  :init
+    (which-key-mode 1)
+  :diminish
+  :config
+  (setq which-key-side-window-location 'bottom
+	  which-key-sort-order #'which-key-key-order-alpha
+	  which-key-allow-imprecise-window-fit nil
+	  which-key-sort-uppercase-first nil
+	  which-key-add-column-padding 1
+	  which-key-max-display-columns nil
+	  which-key-min-display-lines 6
+	  which-key-side-window-slot -10
+	  which-key-side-window-max-height 0.25
+	  which-key-idle-delay 0.8
+	  which-key-max-description-length 25
+	  which-key-allow-imprecise-window-fit nil
+	  which-key-separator " → " ))
 #+end_src
 
 ** Load Ivy
@@ -408,8 +416,68 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
 )
 #+end_src
 
+** Diminish
+Hides/abbreviates modeline displays. Can add :diminish to any use-package block to hide that mode in the modeline
+#+begin_src emacs-lisp
+(use-package diminish)
+#+end_src
+
+** Backups
+Don't put backups in the project directory, too cluttered
+#+begin_src emacs-lisp
+(setq backup-directory-alist '((".*" . "~/.Trash")))
+#+end_src
+
 * IDE Set up
 Configuration for using emacs as a IDE
+** LSP Mode
+#+begin_src emacs-lisp
+(use-package lsp-mode 
+  :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (python-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp
+  :ensure 
+)
+#+end_src
+
+** Company
+Text completion framework. Completion starts after type few letters. 
+
+Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
+#+begin_src emacs-lisp
+  (use-package company
+    :after lsp-mode
+    :hook (prog-mode . company-mode)
+    :bind (:map company-active-map
+           ("<tab>" . company-complete-selection))
+          (:map lsp-mode-map
+           ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
+
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+#+end_src
+
+** Flycheck 
+syntax checking frameworks for various languages.
+
+For python, ensure python-pylint is installed. Install with pip install pylint
+
+#+begin_src emacs-lisp
+(use-package flycheck
+  :ensure t
+  :defer t
+  :diminish
+  :init (global-flycheck-mode))
+
+#+end_src
 
 * Key Bindings
 ** General.el Keybindings
@@ -558,6 +626,13 @@ Configuration for using emacs as a IDE
 (use-package all-the-icons-dired
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
 )
+#+end_src
+
+** Rainbow Mode
+#+begin_src emacs-lisp
+(use-package rainbow-mode
+  :diminish
+  :hook org-mode prog-mode)
 #+end_src
 
 ** Dashboard

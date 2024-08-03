@@ -34,6 +34,7 @@
   - [[#all-the-icons][All the Icons]]
   - [[#rainbow-mode][Rainbow Mode]]
   - [[#dashboard][Dashboard]]
+  - [[#modeline][Modeline]]
 - [[#org-mode][Org Mode]]
   - [[#toc][TOC]]
   - [[#org-bullets][Org Bullets]]
@@ -136,10 +137,13 @@
 ** Vterm Emulator 
 Use vterm to emulate
 #+begin_src emacs-lisp
+  ;; (use-package vterm
+  ;;        :ensure t)
+  ;; ;; 
   (use-package vterm
-      :ensure t)
-  (setq shell-file-name "/bin/fish"
-        vterm-max-scrollback 5000)
+        :custom (vterm-install t))
+    (setq shell-file-name "/bin/fish"
+          vterm-max-scrollback 5000)
 #+end_src
 
 ** Vterm Toggle
@@ -587,6 +591,9 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 
 ** Font
 #+begin_src emacs-lisp
+    ;; increase font size
+    (set-face-attribute 'default nil :height 140)
+
     ;; (set-face-attribute 'default nil
     ;;   :font "Ubuntu"
     ;;   :height 120
@@ -626,6 +633,7 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 (use-package all-the-icons-dired
     :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
 )
+;; run M-x all-the-icons-install-fonts if fonts not showing up
 #+end_src
 
 ** Rainbow Mode
@@ -646,7 +654,7 @@ For python, ensure python-pylint is installed. Install with pip install pylint
     (setq dashboard-center-content t) ;; set to 't' for centered content
     (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
     ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-    (setq dashboard-startup-banner "/home/edwardsun/.emacs.d/img/nerv.png")  ;; use custom image as banner
+    (setq dashboard-startup-banner "/home/edward/.emacs.d/img/nerv.png")  ;; use custom image as banner
     (setq dashboard-items '((recents . 5)
                             ;; (agenda . 5 )
                             (bookmarks . 3)
@@ -657,6 +665,13 @@ For python, ensure python-pylint is installed. Install with pip install pylint
                                       (bookmarks . "book")))
     :config
     (dashboard-setup-startup-hook))
+#+end_src
+
+** Modeline
+#+begin_src emac-lisp
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
 #+end_src
 
 * Org Mode

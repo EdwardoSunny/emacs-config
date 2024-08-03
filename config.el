@@ -84,10 +84,13 @@
 
 (use-package evil-tutor)
 
+;; (use-package vterm
+;;        :ensure t)
+;; ;; 
 (use-package vterm
-    :ensure t)
-(setq shell-file-name "/bin/fish"
-      vterm-max-scrollback 5000)
+      :custom (vterm-install t))
+  (setq shell-file-name "/bin/fish"
+        vterm-max-scrollback 5000)
 
 (use-package vterm-toggle
   :after vterm
@@ -467,7 +470,10 @@ any other key exits this function."
 (setq display-line-numbers-type 'relative) 
 (global-display-line-numbers-mode)
 
-;; (set-face-attribute 'default nil
+;; increase font size
+  (set-face-attribute 'default nil :height 140)
+
+  ;; (set-face-attribute 'default nil
   ;;   :font "Ubuntu"
   ;;   :height 120
   ;;   :weight 'medium)
@@ -517,7 +523,7 @@ any other key exits this function."
   (setq dashboard-center-content t) ;; set to 't' for centered content
   (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
   ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "/home/edwardsun/.emacs.d/img/nerv.png")  ;; use custom image as banner
+  (setq dashboard-startup-banner "/home/edward/.emacs.d/img/nerv.png")  ;; use custom image as banner
   (setq dashboard-items '((recents . 5)
                           ;; (agenda . 5 )
                           (bookmarks . 3)

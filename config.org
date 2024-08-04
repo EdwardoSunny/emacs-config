@@ -9,6 +9,7 @@
 * Table of Contents                                                     :toc:
 - [[#important-programs-to-load-first][Important Programs to Load First]]
   - [[#elpaca-package-manager][Elpaca Package Manager]]
+  - [[#exec-path-from-shell][Exec Path from Shell]]
   - [[#load-evil-mode][Load Evil Mode]]
   - [[#vterm-emulator][Vterm Emulator]]
   - [[#vterm-toggle][Vterm Toggle]]
@@ -93,6 +94,16 @@
   (elpaca-wait)
 #+end_src
 
+** Exec Path from Shell
+#+begin_src emacs-lisp
+  (use-package exec-path-from-shell
+  :ensure t
+  (exec-path-from-shell-copy-env "PYTHONPATH")
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+  )
+#+end_src
+
 ** Load Evil Mode
 #+begin_src emacs-lisp
 (use-package evil
@@ -142,7 +153,7 @@ Use vterm to emulate
   ;; ;; 
   (use-package vterm
         :custom (vterm-install t))
-    (setq shell-file-name "/bin/fish"
+    (setq shell-file-name "/bin/bash"
           vterm-max-scrollback 5000)
 #+end_src
 
@@ -436,23 +447,25 @@ Don't put backups in the project directory, too cluttered
 Configuration for using emacs as a IDE
 ** LSP Mode
 #+begin_src emacs-lisp
-  ;; (use-package lsp-mode 
-  ;;   :init
-  ;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-  ;;   (setq lsp-keymap-prefix "C-c l")
-  ;;   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-  ;;          (python-mode . lsp)
-  ;;          ;; if you want which-key integration
-  ;;          (lsp-mode . lsp-enable-which-key-integration))
-  ;;   :commands lsp
-  ;;   :ensure 
-  ;; )
+  (use-package lsp-mode 
+    :init
+    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+    (setq lsp-keymap-prefix "C-c l")
+    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+           (python-mode . lsp)
+           ;; if you want which-key integration
+           (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp
+    :ensure 
+  )
 #+end_src
 
 ** Company
 Text completion framework. Completion starts after type few letters. 
 
 Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
+
+Must have ran pip install virtualenv before for jedi install server to work properly
 #+begin_src emacs-lisp
   (use-package company
     :after lsp-mode
@@ -465,8 +478,13 @@ Use M-n and M-p to select, <return> to complete or <tab> to complete the common 
     (company-minimum-prefix-length 1)
     (company-idle-delay 0.0))
 
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
+  (use-package company-jedi)
+
+(defun my/python-mode-hook ()
+  (add-to-list 'company-backends 'company-jedi))
+
+(add-hook 'python-mode-hook 'my/python-mode-hook)
+
 #+end_src
 
 ** Flycheck 

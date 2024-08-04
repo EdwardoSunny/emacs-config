@@ -46,6 +46,13 @@
 
 (elpaca-wait)
 
+(use-package exec-path-from-shell
+:ensure t
+(exec-path-from-shell-copy-env "PYTHONPATH")
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
+)
+
 (use-package evil
   :init
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
@@ -89,7 +96,7 @@
 ;; ;; 
 (use-package vterm
       :custom (vterm-install t))
-  (setq shell-file-name "/bin/fish"
+  (setq shell-file-name "/bin/bash"
         vterm-max-scrollback 5000)
 
 (use-package vterm-toggle
@@ -354,31 +361,35 @@ any other key exits this function."
 
 (setq backup-directory-alist '((".*" . "~/.Trash")))
 
-;; (use-package lsp-mode 
-;;   :init
-;;   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-;;   (setq lsp-keymap-prefix "C-c l")
-;;   :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-;;          (python-mode . lsp)
-;;          ;; if you want which-key integration
-;;          (lsp-mode . lsp-enable-which-key-integration))
-;;   :commands lsp
-;;   :ensure 
-;; )
+(use-package lsp-mode 
+  :init
+  ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (python-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp
+  :ensure 
+)
 
 (use-package company
-  :after lsp-mode
-  :hook (prog-mode . company-mode)
-  :bind (:map company-active-map
-         ("<tab>" . company-complete-selection))
-        (:map lsp-mode-map
-         ("<tab>" . company-indent-or-complete-common))
-  :custom
-  (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
+    :after lsp-mode
+    :hook (prog-mode . company-mode)
+    :bind (:map company-active-map
+           ("<tab>" . company-complete-selection))
+          (:map lsp-mode-map
+           ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
 
-(use-package company-box
-  :hook (company-mode . company-box-mode))
+  (use-package company-jedi)
+
+(defun my/python-mode-hook ()
+  (add-to-list 'company-backends 'company-jedi))
+
+(add-hook 'python-mode-hook 'my/python-mode-hook)
 
 (use-package flycheck
   :ensure t

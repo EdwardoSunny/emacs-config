@@ -352,6 +352,11 @@ any other key exits this function."
 
 ;; (provide 'buffer-move)
 
+(use-package dired
+:ensure t 
+:config (add-hook 'dired-mode-hook 'auto-revert-mode)
+)
+
 (use-package projectile
     :config
 (projectile-mode 1)

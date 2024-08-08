@@ -16,13 +16,14 @@
   - [[#load-which-key][Load Which Key]]
   - [[#load-ivy][Load Ivy]]
   - [[#buffer-move][Buffer Move]]
-  - [[#projectile][Projectile]]
+  - [[#dired][Dired]]
   - [[#diminish][Diminish]]
   - [[#backups][Backups]]
 - [[#ide-set-up][IDE Set up]]
   - [[#lsp-mode][LSP Mode]]
   - [[#company][Company]]
   - [[#flycheck][Flycheck]]
+  - [[#projectile][Projectile]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
   - [[#zoom][Zoom]]
@@ -422,12 +423,11 @@ Allow buffer movement like i3. Can move buffers around and reconfigure. Credit t
 
   ;; (provide 'buffer-move)
 #+end_src
-
-** Projectile
+** Dired
 #+begin_src emacs-lisp
-(use-package projectile
-    :config
-(projectile-mode 1)
+(use-package dired
+:ensure t 
+:config (add-hook 'dired-mode-hook 'auto-revert-mode)
 )
 #+end_src
 
@@ -488,7 +488,7 @@ Must have ran pip install virtualenv before for jedi install server to work prop
 #+end_src
 
 ** Flycheck 
-syntax checking frameworks for various languages.
+Syntax checking frameworks for various languages. Basic syntax issue highlighting in code.
 
 For python, ensure python-pylint is installed. Install with pip install pylint
 
@@ -499,6 +499,14 @@ For python, ensure python-pylint is installed. Install with pip install pylint
   :diminish
   :init (global-flycheck-mode))
 
+#+end_src
+
+** Projectile
+#+begin_src emacs-lisp
+(use-package projectile
+    :config
+(projectile-mode 1)
+)
 #+end_src
 
 * Key Bindings

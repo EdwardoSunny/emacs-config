@@ -91,6 +91,14 @@
 
 (use-package evil-tutor)
 
+;; fix SPC RET and TAB in evil mode so can interact with regular emacs
+(with-eval-after-load `evil-maps
+    (define-key evil-motion-state-map (kbd "SPC") nil)
+    (define-key evil-motion-state-map (kbd "TAB") nil)
+    (define-key evil-motion-state-map (kbd "RET") nil)
+)
+(setq org-return-follows-link t)
+
 ;; (use-package vterm
 ;;        :ensure t)
 ;; ;; 
@@ -357,14 +365,33 @@ any other key exits this function."
 :config (add-hook 'dired-mode-hook 'auto-revert-mode)
 )
 
-(use-package projectile
-    :config
-(projectile-mode 1)
-)
-
 (use-package diminish)
 
-(setq backup-directory-alist '((".*" . "~/.Trash")))
+(use-package perspective
+  :custom
+  ;; NOTE! I have also set 'SCP =' to open the perspective menu.
+  ;; I'm only setting the additional binding because setting it
+  ;; helps suppress an annoying warning message.
+  (persp-mode-prefix-key (kbd "C-c M-p"))
+  :init 
+  (persp-mode)
+  :config
+  ;; Sets a file to write to when we save states
+  (setq persp-state-default-file "~/.config/emacs/sessions"))
+
+;; This will group buffers by persp-name in ibuffer.
+(add-hook 'ibuffer-hook
+          (lambda ()
+            (persp-ibuffer-set-filter-groups)
+            (unless (eq ibuffer-sorting-mode 'alphabetic)
+              (ibuffer-do-sort-by-alphabetic))))
+
+;; Automatically save perspective states to file when Emacs exits.
+(add-hook 'kill-emacs-hook #'persp-state-save)
+
+(setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
+
+(use-package magit)
 
 (use-package lsp-mode 
   :init
@@ -402,31 +429,40 @@ any other key exits this function."
   :diminish
   :init (global-flycheck-mode))
 
+(use-package projectile
+    :config
+(projectile-mode 1)
+)
+
+(use-package ein
+:ensure t
+)
+
 (use-package general
         :config
         (general-evil-setup t)
 
 (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
         ;; buffers
-         "b b"   '(ibuffer :which-key "ibuffer")
-         "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-         "b d"   '(kill-current-buffer :which-key "kill current buffer")
-         "b n"   '(next-buffer :which-key "next buffer")
-         "b p"   '(previous-buffer :which-key "previous buffer")
-         "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-         "b D"   '(kill-buffer :which-key "kill buffer")
-        ;; search 
-          "/" '(swiper :wk "swiper search")
-        ;; comment 
-          "TAB TAB" '(comment-line :wk "comment lines")
-        ;; help 
-          "h" '(:ignore t :wk "help")
-          "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-          "hv" '(describe-variable :wk "describe variable")
-          "h r r" '(reload-init-file :wk "reload emacs config")
-        ;; themes 
-          "t"  '(:ignore t :wk "toggles")
-          "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+        ","   '(ibuffer :which-key "ibuffer")
+        "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+        "b d"   '(kill-current-buffer :which-key "kill current buffer")
+        "b n"   '(next-buffer :which-key "next buffer")
+        "b p"   '(previous-buffer :which-key "previous buffer")
+        "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+        "b D"   '(kill-buffer :which-key "kill buffer")
+    ;; search 
+        "/" '(swiper :wk "swiper search")
+    ;; comment 
+        "c c" '(comment-line :wk "comment lines")
+    ;; help 
+        "h" '(:ignore t :wk "help")
+        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+        "hv" '(describe-variable :wk "describe variable")
+        "h r r" '(reload-init-file :wk "reload emacs config")
+    ;; themes 
+        "t"  '(:ignore t :wk "toggles")
+        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
         ;; file navigation 
        "."     '(find-file :which-key "find file")
        "ff"   '(find-file :which-key "find file")
@@ -457,7 +493,8 @@ any other key exits this function."
         "wL" '(buf-move-right :wk "windmove-right")
         ;; terminals 
         "ot" '(vterm-toggle :wk "toggle vterm")
-        ;; "oT" '(vterm :wk "vterm")
+        ;; perspective.el workspaces
+        "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
         )
   )
    (defun reload-init-file()
@@ -471,8 +508,10 @@ any other key exits this function."
 (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
+(global-set-key [escape] `keyboard-escape-quit)
+
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'dracula t)
+(load-theme 'timu-caribbean t)
 
 (setq visible-bell nil)
 (menu-bar-mode -1) 
@@ -535,6 +574,10 @@ any other key exits this function."
   ;; (nerd-icons-font-family "Symbols Nerd Font Mono")
 )
 ;; run M-x nerd-icons-install-fonts if fonts not showing up
+
+(use-package rainbow-delimiters
+  :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
+         (clojure-mode . rainbow-delimiters-mode)))
 
 (use-package rainbow-mode
   :diminish
@@ -836,6 +879,23 @@ any other key exits this function."
   (setq doom-modeline-before-update-env-hook nil)
   (setq doom-modeline-after-update-env-hook nil)
 
+(delete-selection-mode 1)    ;; You can select text and delete it by typing.
+(electric-indent-mode -1)    ;; Turn off the weird indenting that Emacs does by default.
+(electric-pair-mode 1)       ;; Turns on automatic parens pairing
+;; The following prevents <> from auto-pairing when electric-pair-mode is on.
+;; Otherwise, org-tempo is broken when you try to <s TAB...
+(add-hook 'org-mode-hook (lambda ()
+           (setq-local electric-pair-inhibit-predicate
+                   `(lambda (c)
+                  (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
+(global-auto-revert-mode t)  ;; Automatically show changes if the file has changed
+(global-display-line-numbers-mode 1) ;; Display line numbers
+(global-visual-line-mode t)  ;; Enable truncated lines
+(menu-bar-mode -1)           ;; Disable the menu bar 
+(scroll-bar-mode -1)         ;; Disable the scroll bar
+(tool-bar-mode -1)           ;; Disable the tool bar
+(setq org-edit-src-content-indentation 0) ;; Set src block automatic indent to 0 instead of 2.
+
 (use-package toc-org
     :commands toc-org-enable
     :init (add-hook `org-mode-hook `toc-org-enable)
@@ -845,6 +905,17 @@ any other key exits this function."
 (use-package org-bullets)
 (add-hook `org-mode-hook (lambda () (org-bullets-mode 1)))
 
-(electric-indent-mode -1)
+(use-package hl-todo
+  :hook ((org-mode . hl-todo-mode)
+         (prog-mode . hl-todo-mode))
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces
+        `(("TODO"       warning bold)
+          ("FIXME"      error bold)
+          ("HACK"       font-lock-constant-face bold)
+          ("REVIEW"     font-lock-keyword-face bold)
+          ("NOTE"       success bold)
+          ("DEPRECATED" font-lock-doc-face bold))))
 
 (require `org-tempo)

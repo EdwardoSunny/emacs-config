@@ -18,15 +18,19 @@
   - [[#buffer-move][Buffer Move]]
   - [[#dired][Dired]]
   - [[#diminish][Diminish]]
+  - [[#perspective-workspaces][Perspective Workspaces]]
   - [[#backups][Backups]]
 - [[#ide-set-up][IDE Set up]]
+  - [[#magit][Magit]]
   - [[#lsp-mode][LSP Mode]]
   - [[#company][Company]]
   - [[#flycheck][Flycheck]]
   - [[#projectile][Projectile]]
+  - [[#ein-jupyter-notebooks][EIN Jupyter Notebooks]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
   - [[#zoom][Zoom]]
+  - [[#minibuffer-escape][Minibuffer Escape]]
 - [[#appearance][Appearance]]
   - [[#theme][Theme]]
   - [[#minimize-clutter][Minimize Clutter]]
@@ -34,13 +38,15 @@
   - [[#relative-line-numbers][Relative Line Numbers]]
   - [[#font][Font]]
   - [[#all-the-icons][All the Icons]]
+  - [[#rainbow-delimiters][Rainbow Delimiters]]
   - [[#rainbow-mode][Rainbow Mode]]
   - [[#dashboard][Dashboard]]
   - [[#modeline][Modeline]]
+- [[#sane-defaults][Sane Defaults]]
 - [[#org-mode][Org Mode]]
   - [[#toc][TOC]]
   - [[#org-bullets][Org Bullets]]
-  - [[#disable-eletric-indent][Disable Eletric Indent]]
+  - [[#highlight-todo][Highlight TODO]]
   - [[#quick-block-creation-with-org-tempo][Quick Block Creation with Org Tempo]]
 
 * Important Programs to Load First
@@ -144,6 +150,14 @@
   (evil-collection-init))
 
 (use-package evil-tutor)
+
+;; fix SPC RET and TAB in evil mode so can interact with regular emacs
+(with-eval-after-load `evil-maps
+    (define-key evil-motion-state-map (kbd "SPC") nil)
+    (define-key evil-motion-state-map (kbd "TAB") nil)
+    (define-key evil-motion-state-map (kbd "RET") nil)
+)
+(setq org-return-follows-link t)
 #+end_src
 
 ** Vterm Emulator 
@@ -437,14 +451,45 @@ Hides/abbreviates modeline displays. Can add :diminish to any use-package block 
 (use-package diminish)
 #+end_src
 
+** Perspective Workspaces
+Allows multiple workspaces in emacs like i3 or any other window manager. Can have workspaces with buffers. Taken from DistroTube's config.
+
+#+begin_src emacs-lisp
+(use-package perspective
+  :custom
+  ;; NOTE! I have also set 'SCP =' to open the perspective menu.
+  ;; I'm only setting the additional binding because setting it
+  ;; helps suppress an annoying warning message.
+  (persp-mode-prefix-key (kbd "C-c M-p"))
+  :init 
+  (persp-mode)
+  :config
+  ;; Sets a file to write to when we save states
+  (setq persp-state-default-file "~/.config/emacs/sessions"))
+
+;; This will group buffers by persp-name in ibuffer.
+(add-hook 'ibuffer-hook
+          (lambda ()
+            (persp-ibuffer-set-filter-groups)
+            (unless (eq ibuffer-sorting-mode 'alphabetic)
+              (ibuffer-do-sort-by-alphabetic))))
+
+;; Automatically save perspective states to file when Emacs exits.
+(add-hook 'kill-emacs-hook #'persp-state-save)
+#+end_src
+
 ** Backups
 Don't put backups in the project directory, too cluttered
 #+begin_src emacs-lisp
-(setq backup-directory-alist '((".*" . "~/.Trash")))
+  (setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 #+end_src
 
 * IDE Set up
 Configuration for using emacs as a IDE
+** Magit
+#+begin_src emacs-lisp
+(use-package magit)
+#+end_src
 ** LSP Mode
 #+begin_src emacs-lisp
   (use-package lsp-mode 
@@ -509,73 +554,81 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 )
 #+end_src
 
+** EIN Jupyter Notebooks
+#+begin_src emacs-lisp
+(use-package ein
+:ensure t
+)
+#+end_src
+
 * Key Bindings
 ** General.el Keybindings
 #+begin_src emacs-lisp
-          (use-package general
-            :config
-            (general-evil-setup t)
+        (use-package general
+          :config
+          (general-evil-setup t)
 
-    (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-            ;; buffers
-             "b b"   '(ibuffer :which-key "ibuffer")
-             "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-             "b d"   '(kill-current-buffer :which-key "kill current buffer")
-             "b n"   '(next-buffer :which-key "next buffer")
-             "b p"   '(previous-buffer :which-key "previous buffer")
-             "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-             "b D"   '(kill-buffer :which-key "kill buffer")
-            ;; search 
-              "/" '(swiper :wk "swiper search")
-            ;; comment 
-              "TAB TAB" '(comment-line :wk "comment lines")
-            ;; help 
-              "h" '(:ignore t :wk "help")
-              "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-              "hv" '(describe-variable :wk "describe variable")
-              "h r r" '(reload-init-file :wk "reload emacs config")
-            ;; themes 
-              "t"  '(:ignore t :wk "toggles")
-              "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-            ;; file navigation 
-           "."     '(find-file :which-key "find file")
-           "ff"   '(find-file :which-key "find file")
-           "fr"   '(counsel-recentf :which-key "recent files")
-           "fs"   '(save-buffer :which-key "save file")
-           "fu"   '(sudo-edit-find-file :which-key "sudo find file")
-           "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
-           "fC"   '(copy-file :which-key "copy file")
-           "fD"   '(delete-file :which-key "delete file")
-           "fR"   '(rename-file :which-key "rename file")
-           "fS"   '(write-file :which-key "save file as...")
-           "fU"   '(sudo-edit :which-key "sudo edit file")
-            ;; windows 
-            "wv" '(evil-window-vsplit :wk "split-window-right")
-            "ws" '(evil-window-split  :wk "split-window-below")
-            "wd" '(evil-window-delete :wk "delete-window")
-            "wD" '(delete-other-windows :wk "delete-other-windows")
-            ;; navigation 
-            "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
-            "wj" '(evil-window-down :wk "windmove-down")
-            "wk" '(evil-window-up :wk "windmove-up")
-            "wl" '(evil-window-right :wk "windmove-right")
-            "ww" '(evil-window-next :wk "windmove-next")
-            ;; window move
-            "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
-            "wJ" '(buf-move-down :wk "move window down")
-            "wK" '(buf-move-up :wk "move window up")
-            "wL" '(buf-move-right :wk "windmove-right")
-            ;; terminals 
-            "ot" '(vterm-toggle :wk "toggle vterm")
-            ;; "oT" '(vterm :wk "vterm")
-            )
-      )
-       (defun reload-init-file()
-          (interactive)
-          (load-file user-init-file)
-          (load-file user-init-file)
-      )
- 
+  (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+          ;; buffers
+          ","   '(ibuffer :which-key "ibuffer")
+          "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+          "b d"   '(kill-current-buffer :which-key "kill current buffer")
+          "b n"   '(next-buffer :which-key "next buffer")
+          "b p"   '(previous-buffer :which-key "previous buffer")
+          "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+          "b D"   '(kill-buffer :which-key "kill buffer")
+      ;; search 
+          "/" '(swiper :wk "swiper search")
+      ;; comment 
+          "c c" '(comment-line :wk "comment lines")
+      ;; help 
+          "h" '(:ignore t :wk "help")
+          "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+          "hv" '(describe-variable :wk "describe variable")
+          "h r r" '(reload-init-file :wk "reload emacs config")
+      ;; themes 
+          "t"  '(:ignore t :wk "toggles")
+          "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+          ;; file navigation 
+         "."     '(find-file :which-key "find file")
+         "ff"   '(find-file :which-key "find file")
+         "fr"   '(counsel-recentf :which-key "recent files")
+         "fs"   '(save-buffer :which-key "save file")
+         "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+         "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+         "fC"   '(copy-file :which-key "copy file")
+         "fD"   '(delete-file :which-key "delete file")
+         "fR"   '(rename-file :which-key "rename file")
+         "fS"   '(write-file :which-key "save file as...")
+         "fU"   '(sudo-edit :which-key "sudo edit file")
+          ;; windows 
+          "wv" '(evil-window-vsplit :wk "split-window-right")
+          "ws" '(evil-window-split  :wk "split-window-below")
+          "wd" '(evil-window-delete :wk "delete-window")
+          "wD" '(delete-other-windows :wk "delete-other-windows")
+          ;; navigation 
+          "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+          "wj" '(evil-window-down :wk "windmove-down")
+          "wk" '(evil-window-up :wk "windmove-up")
+          "wl" '(evil-window-right :wk "windmove-right")
+          "ww" '(evil-window-next :wk "windmove-next")
+          ;; window move
+          "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
+          "wJ" '(buf-move-down :wk "move window down")
+          "wK" '(buf-move-up :wk "move window up")
+          "wL" '(buf-move-right :wk "windmove-right")
+          ;; terminals 
+          "ot" '(vterm-toggle :wk "toggle vterm")
+          ;; perspective.el workspaces
+          "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+          )
+    )
+     (defun reload-init-file()
+        (interactive)
+        (load-file user-init-file)
+        (load-file user-init-file)
+    )
+
 
 #+end_src
 
@@ -587,11 +640,17 @@ For python, ensure python-pylint is installed. Install with pip install pylint
   (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 #+end_src
 
+** Minibuffer Escape
+Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single press of escape to quit minibuffer
+#+begin_src emacs-lisp
+(global-set-key [escape] `keyboard-escape-quit)
+#+end_src
+
 * Appearance
 ** Theme
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-  (load-theme 'dracula t)
+  (load-theme 'timu-caribbean t)
 #+end_src
 
 ** Minimize Clutter
@@ -671,7 +730,16 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 ;; run M-x nerd-icons-install-fonts if fonts not showing up
 #+end_src
 
+** Rainbow Delimiters
+Rainbow colored parentheses
+#+begin_src emacs-lisp
+(use-package rainbow-delimiters
+  :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
+         (clojure-mode . rainbow-delimiters-mode)))
+#+end_src
+
 ** Rainbow Mode
+Display the actual color as a background for hex colors like #ffffff. prog-mode enables for all programming modes and org-mode enables for org modes.
 #+begin_src emacs-lisp
 (use-package rainbow-mode
   :diminish
@@ -980,6 +1048,27 @@ For python, ensure python-pylint is installed. Install with pip install pylint
   (setq doom-modeline-after-update-env-hook nil)
 #+end_src
 
+* Sane Defaults
+Sane defaults for emacs 
+#+begin_src emacs-lisp
+(delete-selection-mode 1)    ;; You can select text and delete it by typing.
+(electric-indent-mode -1)    ;; Turn off the weird indenting that Emacs does by default.
+(electric-pair-mode 1)       ;; Turns on automatic parens pairing
+;; The following prevents <> from auto-pairing when electric-pair-mode is on.
+;; Otherwise, org-tempo is broken when you try to <s TAB...
+(add-hook 'org-mode-hook (lambda ()
+           (setq-local electric-pair-inhibit-predicate
+                   `(lambda (c)
+                  (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
+(global-auto-revert-mode t)  ;; Automatically show changes if the file has changed
+(global-display-line-numbers-mode 1) ;; Display line numbers
+(global-visual-line-mode t)  ;; Enable truncated lines
+(menu-bar-mode -1)           ;; Disable the menu bar 
+(scroll-bar-mode -1)         ;; Disable the scroll bar
+(tool-bar-mode -1)           ;; Disable the tool bar
+(setq org-edit-src-content-indentation 0) ;; Set src block automatic indent to 0 instead of 2.
+#+end_src
+
 * Org Mode
 ** TOC
 #+begin_src emacs-lisp
@@ -997,10 +1086,20 @@ Have pretty org mode bullets instead of just asteriks
   (add-hook `org-mode-hook (lambda () (org-bullets-mode 1)))
 #+end_src
 
-** Disable Eletric Indent
-Org mode source blocks have weird indent by default
+** Highlight TODO
 #+begin_src emacs-lisp
-(electric-indent-mode -1)
+(use-package hl-todo
+  :hook ((org-mode . hl-todo-mode)
+         (prog-mode . hl-todo-mode))
+  :config
+  (setq hl-todo-highlight-punctuation ":"
+        hl-todo-keyword-faces
+        `(("TODO"       warning bold)
+          ("FIXME"      error bold)
+          ("HACK"       font-lock-constant-face bold)
+          ("REVIEW"     font-lock-keyword-face bold)
+          ("NOTE"       success bold)
+          ("DEPRECATED" font-lock-doc-face bold))))
 #+end_src
 
 ** Quick Block Creation with Org Tempo

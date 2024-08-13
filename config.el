@@ -1,57 +1,20 @@
-(defvar elpaca-installer-version 0.7)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-  			    :ref nil :depth 1
-  			    :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-  			    :build (:not elpaca--activate-package)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (< emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-      (if-let ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-  	       ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-  					       ,@(when-let ((depth (plist-get order :depth)))
-  						   (list (format "--depth=%d" depth) "--no-single-branch"))
-  					       ,(plist-get order :repo) ,repo))))
-  	       ((zerop (call-process "git" nil buffer t "checkout"
-  				     (or (plist-get order :ref) "--"))))
-  	       (emacs (concat invocation-directory invocation-name))
-  	       ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-  				     "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-  	       ((require 'elpaca))
-  	       ((elpaca-generate-autoloads "elpaca" repo)))
-  	  (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-  	(error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (load "./elpaca-autoloads")))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
-
-
-;; Install use-package support
-(elpaca elpaca-use-package
-  ;; Enable use-package :ensure support for Elpaca.
-  (elpaca-use-package-mode)
-  (setq elpaca-use-package-by-default t))
-
-(elpaca-wait)
-
-(use-package exec-path-from-shell
-:ensure t
-(exec-path-from-shell-copy-env "PYTHONPATH")
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
-)
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+      (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
 
 (use-package evil
   :init
@@ -100,7 +63,6 @@
 (setq org-return-follows-link t)
 
 ;; (use-package vterm
-;;        :ensure t)
 ;; ;; 
 (use-package vterm
       :custom (vterm-install t))
@@ -125,6 +87,10 @@
                   ;;(dedicated . t) ;dedicated is supported in emacs27
                   (reusable-frames . visible)
                   (window-height . 0.3))))
+
+(use-package multi-vterm)
+
+(setq multi-vterm-dedicated-window-height-percent 30)
 
 (use-package which-key
   :init
@@ -164,12 +130,10 @@
   (ivy-mode))
 
 (use-package all-the-icons-ivy-rich
-  :ensure t
   :init (all-the-icons-ivy-rich-mode 1))
 
 (use-package ivy-rich
   :after ivy
-  :ensure t
   :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
   :custom
   (ivy-virtual-abbreviate 'full
@@ -360,10 +324,9 @@ any other key exits this function."
 
 ;; (provide 'buffer-move)
 
-(use-package dired
-:ensure t 
-:config (add-hook 'dired-mode-hook 'auto-revert-mode)
-)
+(require 'dired)
+(setq dired-listing-switches "-alh")
+(add-hook 'dired-mode-hook 'auto-revert-mode)
 
 (use-package diminish)
 
@@ -402,7 +365,6 @@ any other key exits this function."
          ;; if you want which-key integration
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
-  :ensure 
 )
 
 (use-package company
@@ -424,7 +386,6 @@ any other key exits this function."
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
 (use-package flycheck
-  :ensure t
   :defer t
   :diminish
   :init (global-flycheck-mode))
@@ -434,11 +395,25 @@ any other key exits this function."
 (projectile-mode 1)
 )
 
-(use-package ein
-:ensure t
-)
+(use-package ein)
 
+(use-package auctex)
 
+(setq TeX-auto-save t)
+(setq TeX-parse-self t)
+(setq-default TeX-master nil)
+
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+
+;; compile into PDF
+(setq TeX-PDF-mode t)
+
+(use-package company-math)
 
 (use-package general
         :config
@@ -493,17 +468,57 @@ any other key exits this function."
         "wJ" '(buf-move-down :wk "move window down")
         "wK" '(buf-move-up :wk "move window up")
         "wL" '(buf-move-right :wk "windmove-right")
-        ;; terminals 
-        "ot" '(vterm-toggle :wk "toggle vterm")
+        ;; terminal
+        "oT" '(multi-vterm :wk "new multi-vterm buffer")
+        "ot" '(multi-vterm-dedicated-toggle :wk "new multi-vterm buffer")
+        "oo" '(multi-vterm-dedicated-select :wk "new multi-vterm buffer")
+        "op" '(multi-vterm-prev :wk "multi-vterm previous terminal")
+        "on" '(multi-vterm-next :wk "multi-vterm next terminal")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
         )
   )
+
    (defun reload-init-file()
       (interactive)
       (load-file user-init-file)
       (load-file user-init-file)
   )
+
+(use-package multi-vterm
+	:config
+	(add-hook 'vterm-mode-hook
+			(lambda ()
+			(setq-local evil-insert-state-cursor 'box)
+			(evil-insert-state)))
+	(define-key vterm-mode-map [return]                      #'vterm-send-return)
+
+	(setq vterm-keymap-exceptions nil)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
+	(evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
+	(evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
+	;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
+	;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
+	;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
+	(evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
+	(evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
+	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -559,7 +574,6 @@ any other key exits this function."
  (setq global-prettify-symbols-mode t)
 
 (use-package all-the-icons
-    :ensure t
     :if (display-graphic-p)
 )
 
@@ -586,7 +600,6 @@ any other key exits this function."
   :hook org-mode prog-mode)
 
 (use-package dashboard
-  :ensure t 
   :init
   (setq initial-buffer-choice 'dashboard-open)
   (setq dashboard-set-heading-icons t)
@@ -607,11 +620,9 @@ any other key exits this function."
   (dashboard-setup-startup-hook))
 
 (use-package doom-modeline
-    :ensure t
     :init (doom-modeline-mode 1))
 
 (use-package nyan-mode
-  :ensure t
   :config
   ;; Enable animation
   (setq nyan-animate-nyancat t)

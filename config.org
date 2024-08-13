@@ -614,80 +614,94 @@ sudo apt install texlive-full
 Alternative autocompletion for LaTex using company-mode. It is also nice to display unicode math symbols in Emacs LaTeX documents which can be texed with XeTeX or LuaTeX using the unicode-math package (see company-math).
 #+begin_src emacs-lisp
 (use-package company-math)
+(defun my-latex-mode-setup ()
+  (setq-local company-backends
+              (append '((company-math-symbols-latex company-math-symbols-unicode))
+                      company-backends)))
+
+(add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
+(add-hook 'after-init-hook 'global-company-mode)
 #+end_src
 
 * Key Bindings
 ** General.el Keybindings
 #+begin_src emacs-lisp
-        (use-package general
-          :config
-          (general-evil-setup t)
+      (use-package general
+        :config
+        (general-evil-setup t)
 
-  (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-          ;; buffers
-          ","   '(ibuffer :which-key "ibuffer")
-          "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-          "b d"   '(kill-current-buffer :which-key "kill current buffer")
-          "b n"   '(next-buffer :which-key "next buffer")
-          "b p"   '(previous-buffer :which-key "previous buffer")
-          "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-          "b D"   '(kill-buffer :which-key "kill buffer")
-      ;; search 
-          "/" '(swiper :wk "swiper search")
-      ;; comment 
-          "c c" '(comment-line :wk "comment lines")
-      ;; help 
-          "h" '(:ignore t :wk "help")
-          "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-          "hv" '(describe-variable :wk "describe variable")
-          "h r r" '(reload-init-file :wk "reload emacs config")
-      ;; themes 
-          "t"  '(:ignore t :wk "toggles")
-          "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-          ;; file navigation 
-         "."     '(find-file :which-key "find file")
-         "ff"   '(find-file :which-key "find file")
-         "fr"   '(counsel-recentf :which-key "recent files")
-         "fs"   '(save-buffer :which-key "save file")
-         "fu"   '(sudo-edit-find-file :which-key "sudo find file")
-         "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
-         "fC"   '(copy-file :which-key "copy file")
-         "fD"   '(delete-file :which-key "delete file")
-         "fR"   '(rename-file :which-key "rename file")
-         "fS"   '(write-file :which-key "save file as...")
-         "fU"   '(sudo-edit :which-key "sudo edit file")
-          ;; windows 
-          "wv" '(evil-window-vsplit :wk "split-window-right")
-          "ws" '(evil-window-split  :wk "split-window-below")
-          "wd" '(evil-window-delete :wk "delete-window")
-          "wD" '(delete-other-windows :wk "delete-other-windows")
-          ;; navigation 
-          "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
-          "wj" '(evil-window-down :wk "windmove-down")
-          "wk" '(evil-window-up :wk "windmove-up")
-          "wl" '(evil-window-right :wk "windmove-right")
-          "ww" '(evil-window-next :wk "windmove-next")
-          ;; window move
-          "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
-          "wJ" '(buf-move-down :wk "move window down")
-          "wK" '(buf-move-up :wk "move window up")
-          "wL" '(buf-move-right :wk "windmove-right")
-          ;; terminal
-          "oT" '(multi-vterm :wk "new multi-vterm buffer")
-          "ot" '(multi-vterm-dedicated-toggle :wk "new multi-vterm buffer")
-          "oo" '(multi-vterm-dedicated-select :wk "new multi-vterm buffer")
-          "op" '(multi-vterm-prev :wk "multi-vterm previous terminal")
-          "on" '(multi-vterm-next :wk "multi-vterm next terminal")
-          ;; perspective.el workspaces
-          "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
-          )
-    )
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+        ;; buffers
+        ","   '(ibuffer :which-key "ibuffer")
+        "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+        "b d"   '(kill-current-buffer :which-key "kill current buffer")
+        "b n"   '(next-buffer :which-key "next buffer")
+        "b p"   '(previous-buffer :which-key "previous buffer")
+        "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+        "b D"   '(kill-buffer :which-key "kill buffer")
+    ;; search 
+        "/" '(swiper :wk "swiper search")
+    ;; comment 
+        "c c" '(comment-line :wk "comment lines")
+    ;; help 
+        "h" '(:ignore t :wk "help")
+        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+        "hv" '(describe-variable :wk "describe variable")
+        "h r r" '(reload-init-file :wk "reload emacs config")
+    ;; themes 
+        "t"  '(:ignore t :wk "toggles")
+        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+        ;; file navigation 
+       "."     '(find-file :which-key "find file")
+       "ff"   '(find-file :which-key "find file")
+       "fr"   '(counsel-recentf :which-key "recent files")
+       "fs"   '(save-buffer :which-key "save file")
+       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+       "fC"   '(copy-file :which-key "copy file")
+       "fD"   '(delete-file :which-key "delete file")
+       "fR"   '(rename-file :which-key "rename file")
+       "fS"   '(write-file :which-key "save file as...")
+       "fU"   '(sudo-edit :which-key "sudo edit file")
+        ;; windows 
+        "wv" '(evil-window-vsplit :wk "split-window-right")
+        "ws" '(evil-window-split  :wk "split-window-below")
+        "wd" '(evil-window-delete :wk "delete-window")
+        "wD" '(delete-other-windows :wk "delete-other-windows")
+        ;; navigation 
+        "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+        "wj" '(evil-window-down :wk "windmove-down")
+        "wk" '(evil-window-up :wk "windmove-up")
+        "wl" '(evil-window-right :wk "windmove-right")
+        "ww" '(evil-window-next :wk "windmove-next")
+        ;; window move
+        "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
+        "wJ" '(buf-move-down :wk "move window down")
+        "wK" '(buf-move-up :wk "move window up")
+        "wL" '(buf-move-right :wk "windmove-right")
+        ;; terminal
+        "oT" '(multi-vterm :wk "new multi-vterm buffer")
+        "ot" '(multi-vterm-dedicated-toggle :wk "new multi-vterm buffer")
+        "oo" '(multi-vterm-dedicated-select :wk "new multi-vterm buffer")
+        "op" '(multi-vterm-prev :wk "multi-vterm previous terminal")
+        "on" '(multi-vterm-next :wk "multi-vterm next terminal")
+        ;; perspective.el workspaces
+        "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+        ;; AUCTex bindings
+        ;; previewing 
+        "lpp" '(preview-buffer :wk "preview current latex buffer") 
+        "lpa" '(preview-at-point :wk "toggle latex preview at point") 
+        "lpd" '(preview-document :wk "preview current latex document") 
+        ;; compiling
+        "lca" '(TeX-command-run-all :wk "compile current document") 
+        )
+  )
 
-     (defun reload-init-file()
-        (interactive)
-        (load-file user-init-file)
-        (load-file user-init-file)
-    )
+   (defun reload-init-file()
+      (interactive)
+      (load-file user-init-file)
+      (load-file user-init-file)
+  )
 
 
 #+end_src
@@ -698,7 +712,7 @@ For multi-vterm integration with evil mode
 (use-package multi-vterm
 	:config
 	(add-hook 'vterm-mode-hook
-			(lambda ()
+                            (lambda ()
 			(setq-local evil-insert-state-cursor 'box)
 			(evil-insert-state)))
 	(define-key vterm-mode-map [return]                      #'vterm-send-return)

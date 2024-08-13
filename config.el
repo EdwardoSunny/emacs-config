@@ -414,6 +414,13 @@ any other key exits this function."
 (setq TeX-PDF-mode t)
 
 (use-package company-math)
+(defun my-latex-mode-setup ()
+  (setq-local company-backends
+              (append '((company-math-symbols-latex company-math-symbols-unicode))
+                      company-backends)))
+
+(add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
+(add-hook 'after-init-hook 'global-company-mode)
 
 (use-package general
         :config
@@ -476,6 +483,13 @@ any other key exits this function."
         "on" '(multi-vterm-next :wk "multi-vterm next terminal")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+        ;; AUCTex bindings
+        ;; previewing 
+        "lpp" '(preview-buffer :wk "preview current latex buffer") 
+        "lpa" '(preview-at-point :wk "toggle latex preview at point") 
+        "lpd" '(preview-document :wk "preview current latex document") 
+        ;; compiling
+        "lca" '(TeX-command-run-all :wk "compile current document") 
         )
   )
 
@@ -488,7 +502,7 @@ any other key exits this function."
 (use-package multi-vterm
 	:config
 	(add-hook 'vterm-mode-hook
-			(lambda ()
+                            (lambda ()
 			(setq-local evil-insert-state-cursor 'box)
 			(evil-insert-state)))
 	(define-key vterm-mode-map [return]                      #'vterm-send-return)

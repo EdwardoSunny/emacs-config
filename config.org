@@ -27,6 +27,8 @@
   - [[#flycheck][Flycheck]]
   - [[#projectile][Projectile]]
   - [[#ein-jupyter-notebooks][EIN Jupyter Notebooks]]
+- [[#latex-editing][LaTex Editing]]
+  - [[#auctex][AUCTex]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
   - [[#zoom][Zoom]]
@@ -559,6 +561,12 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 (use-package ein
 :ensure t
 )
+#+end_src
+
+* LaTex Editing
+Making emacs able to write LaTex documents with ease and allow previewing
+** AUCTex
+#+begin_src emacs-lisp
 #+end_src
 
 * Key Bindings

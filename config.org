@@ -8,7 +8,7 @@
 
 * Table of Contents                                                     :toc:
 - [[#important-programs-to-load-first][Important Programs to Load First]]
-  - [[#elpaca-package-manager][Elpaca Package Manager]]
+  - [[#straight-package-manager][Straight Package Manager]]
   - [[#load-evil-mode][Load Evil Mode]]
   - [[#vterm-emulator][Vterm Emulator]]
   - [[#load-which-key][Load Which Key]]
@@ -52,7 +52,10 @@
   - [[#quick-block-creation-with-org-tempo][Quick Block Creation with Org Tempo]]
 
 * Important Programs to Load First
-** Elpaca Package Manager
+** Straight Package Manager
+Ol' reliable...
+
+Tried elpaca but was very unstable project. For instance, could not download AUCTex. Straight stable and no issues so far.
 #+begin_src emacs-lisp
 (defvar bootstrap-version)
 (let ((bootstrap-file

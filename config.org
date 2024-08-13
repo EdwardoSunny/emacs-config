@@ -522,6 +522,60 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 #+end_src
 
 ** EIN Jupyter Notebooks
+Package that allows emacs to edit and run .ipynb files and behave like wrapper around jupyter notebooks/lab.
+
+Launch a session:
+- first start a jupyter session with:
+#+begin_src sh
+jupyter notebook
+#+end_src
+- open emacs and run the following. This will attach emacs to jupyter server you started in background
+#+begin_src sh
+M-x ein:run
+#+end_src
+- now use find the directory you want to root your jupyter session on
+- or can do M-x ein:notebooklist-open
+
+Usage:
+- Mostly works with evil keybindings. Can edit inside the cells with evil bindings
+- However, currently saving only works with C-x C-s like old emacs along with many other bindings
+- evaluate cell with M-RET
+- change cell type from code to markdown to etc. with C-c C-u ein:worksheet-change-cell-type 
+
+Should really rebind these for evil mode to space based and more like regular jupyter...
+
+Good resources to help:
+- https://tkf.github.io/emacs-ipython-notebook/
+- https://github.com/millejoh/emacs-ipython-notebook
+- https://martibosch.github.io/jupyter-emacs-universe/
+
+For Jupyter in general:
+#+begin_src sh
+pip install ipykernel
+pyenv install 3.10 # if want to use pyenv
+pyenv shell 3.10
+
+# ----------------------
+pyenv virtualenv jupyter
+pyenv activate jupyter
+# OR alternatively use venv
+python -m venv "myenv"
+source myenv/bin/activate # activate with this instead
+# if use this, deactivate with just $ deactivate
+# ----------------------
+
+# install jupyter lab in an env first
+pip install jupyterlab
+pyenv deactivate
+
+# now can create any other env 
+pyenv virtualenv tfenv 
+pyenv activate tfenv 
+pip install tensorflow # install wanted packages
+ipython kernel install --user --name tfenv # add the env as a kernel
+# now any packages installed in tfenv will be reflected in the tfenv kernel for jupyter
+#+end_src
+
 #+begin_src emacs-lisp
 (use-package ein)
 #+end_src

@@ -524,6 +524,10 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 ** EIN Jupyter Notebooks
 Package that allows emacs to edit and run .ipynb files and behave like wrapper around jupyter notebooks/lab.
 
+#+begin_src emacs-lisp
+(use-package ein)
+#+end_src
+
 Launch a session:
 - first start a jupyter session with:
 #+begin_src sh
@@ -574,10 +578,6 @@ pyenv activate tfenv
 pip install tensorflow # install wanted packages
 ipython kernel install --user --name tfenv # add the env as a kernel
 # now any packages installed in tfenv will be reflected in the tfenv kernel for jupyter
-#+end_src
-
-#+begin_src emacs-lisp
-(use-package ein)
 #+end_src
 
 * LaTex Editing

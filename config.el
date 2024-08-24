@@ -62,35 +62,35 @@
 )
 (setq org-return-follows-link t)
 
-;; (use-package vterm
-;; ;; 
-(use-package vterm
-      :custom (vterm-install t))
-  (setq shell-file-name "/bin/bash"
-        vterm-max-scrollback 5000)
+(defun efs/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
 
-(use-package vterm-toggle
-  :after vterm
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
+
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
+
+(use-package eshell-git-prompt
+  :after eshell)
+
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
   :config
-  (setq vterm-toggle-fullscreen-p nil)
-  ;; (setq vterm-toggle-scope 'project)
-  (add-to-list 'display-buffer-alist
-               '((lambda (buffer-or-name _)
-                     (let ((buffer (get-buffer buffer-or-name)))
-                       (with-current-buffer buffer
-                         (or (equal major-mode 'vterm-mode)
-                             (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-                  (display-buffer-reuse-window display-buffer-at-bottom)
-                  ;;(display-buffer-reuse-window display-buffer-in-direction)
-                  ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                  ;;(direction . bottom)
-                  ;;(dedicated . t) ;dedicated is supported in emacs27
-                  (reusable-frames . visible)
-                  (window-height . 0.3))))
 
-(use-package multi-vterm)
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "vim")))
 
-(setq multi-vterm-dedicated-window-height-percent 30)
+  (eshell-git-prompt-use-theme 'powerline))
 
 (use-package which-key
   :init
@@ -476,11 +476,7 @@ any other key exits this function."
         "wK" '(buf-move-up :wk "move window up")
         "wL" '(buf-move-right :wk "windmove-right")
         ;; terminal
-        "oT" '(multi-vterm :wk "new multi-vterm buffer")
-        "ot" '(multi-vterm-dedicated-toggle :wk "new multi-vterm buffer")
-        "oo" '(multi-vterm-dedicated-select :wk "new multi-vterm buffer")
-        "op" '(multi-vterm-prev :wk "multi-vterm previous terminal")
-        "on" '(multi-vterm-next :wk "multi-vterm next terminal")
+        "ot" '(eshell :wk "open eshell")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
         ;; AUCTex bindings
@@ -498,41 +494,6 @@ any other key exits this function."
       (load-file user-init-file)
       (load-file user-init-file)
   )
-
-(use-package multi-vterm
-	:config
-	(add-hook 'vterm-mode-hook
-                            (lambda ()
-			(setq-local evil-insert-state-cursor 'box)
-			(evil-insert-state)))
-	(define-key vterm-mode-map [return]                      #'vterm-send-return)
-
-	(setq vterm-keymap-exceptions nil)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
-	(evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
-	(evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
-	(evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
-	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)
@@ -608,6 +569,7 @@ any other key exits this function."
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
          (clojure-mode . rainbow-delimiters-mode)))
+(rainbow-delimiters-mode)
 
 (use-package rainbow-mode
   :diminish

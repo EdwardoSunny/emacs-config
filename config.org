@@ -1,3 +1,4 @@
+
 # Created 2024-07-28 Sun 17:38
 #+TITLE: 
 #+AUTHOR: Edward Sun
@@ -10,7 +11,7 @@
 - [[#important-programs-to-load-first][Important Programs to Load First]]
   - [[#straight-package-manager][Straight Package Manager]]
   - [[#load-evil-mode][Load Evil Mode]]
-  - [[#vterm-emulator][Vterm Emulator]]
+  - [[#eshell][EShell]]
   - [[#load-which-key][Load Which Key]]
   - [[#load-ivy][Load Ivy]]
   - [[#buffer-move][Buffer Move]]
@@ -30,7 +31,6 @@
   - [[#company-math][Company Math]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
-  - [[#multi-vterm-keybinds][Multi-Vterm Keybinds]]
   - [[#zoom][Zoom]]
   - [[#minibuffer-escape][Minibuffer Escape]]
 - [[#appearance][Appearance]]
@@ -125,48 +125,39 @@ Tried elpaca but was very unstable project. For instance, could not download AUC
 (setq org-return-follows-link t)
 #+end_src
 
-** Vterm Emulator 
+** EShell 
+Vterm requires compiling with cmake, etc. I want everything to be package as much as possible into emacs itself.
 Use vterm to emulate
 #+begin_src emacs-lisp
-  ;; (use-package vterm
-  ;; ;; 
-  (use-package vterm
-        :custom (vterm-install t))
-    (setq shell-file-name "/bin/bash"
-          vterm-max-scrollback 5000)
-#+end_src
+(defun efs/configure-eshell ()
+  ;; Save command history when commands are entered
+  (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
 
-*** Vterm Toggle
-Allow vscode like toggle to show and hide vterm
-#+begin_src emacs-lisp
-  (use-package vterm-toggle
-    :after vterm
-    :config
-    (setq vterm-toggle-fullscreen-p nil)
-    ;; (setq vterm-toggle-scope 'project)
-    (add-to-list 'display-buffer-alist
-                 '((lambda (buffer-or-name _)
-                       (let ((buffer (get-buffer buffer-or-name)))
-                         (with-current-buffer buffer
-                           (or (equal major-mode 'vterm-mode)
-                               (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
-                    (display-buffer-reuse-window display-buffer-at-bottom)
-                    ;;(display-buffer-reuse-window display-buffer-in-direction)
-                    ;;display-buffer-in-direction/direction/dedicated is added in emacs27
-                    ;;(direction . bottom)
-                    ;;(dedicated . t) ;dedicated is supported in emacs27
-                    (reusable-frames . visible)
-                    (window-height . 0.3))))
-#+end_src
+  ;; Truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
 
-*** Multi Vterm
-Manage multiple vterms at once
+  ;; Bind some useful keys for evil-mode
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
 
-#+begin_src emacs-lisp
+  (setq eshell-history-size         10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
 
-(use-package multi-vterm)
+(use-package eshell-git-prompt
+  :after eshell)
 
-(setq multi-vterm-dedicated-window-height-percent 30)
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
+  :config
+
+  (with-eval-after-load 'esh-opt
+    (setq eshell-destroy-buffer-when-process-dies t)
+    (setq eshell-visual-commands '("htop" "zsh" "vim")))
+
+  (eshell-git-prompt-use-theme 'powerline))
 #+end_src
 
 ** Load Which Key
@@ -680,11 +671,7 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
         "wK" '(buf-move-up :wk "move window up")
         "wL" '(buf-move-right :wk "windmove-right")
         ;; terminal
-        "oT" '(multi-vterm :wk "new multi-vterm buffer")
-        "ot" '(multi-vterm-dedicated-toggle :wk "new multi-vterm buffer")
-        "oo" '(multi-vterm-dedicated-select :wk "new multi-vterm buffer")
-        "op" '(multi-vterm-prev :wk "multi-vterm previous terminal")
-        "on" '(multi-vterm-next :wk "multi-vterm next terminal")
+        "ot" '(eshell :wk "open eshell")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
         ;; AUCTex bindings
@@ -704,45 +691,6 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
   )
 
 
-#+end_src
-
-** Multi-Vterm Keybinds
-For multi-vterm integration with evil mode
-#+begin_src emacs-lisp
-(use-package multi-vterm
-	:config
-	(add-hook 'vterm-mode-hook
-                            (lambda ()
-			(setq-local evil-insert-state-cursor 'box)
-			(evil-insert-state)))
-	(define-key vterm-mode-map [return]                      #'vterm-send-return)
-
-	(setq vterm-keymap-exceptions nil)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-e")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-f")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-a")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-v")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-b")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-w")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-u")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-n")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-m")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-p")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-j")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-k")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-r")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-t")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-g")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-c")      #'vterm--self-insert)
-	(evil-define-key 'insert vterm-mode-map (kbd "C-SPC")    #'vterm--self-insert)
-	(evil-define-key 'normal vterm-mode-map (kbd "C-d")      #'vterm--self-insert)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",c")       #'multi-vterm)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",n")       #'multi-vterm-next)
-	;; (evil-define-key 'normal vterm-mode-map (kbd ",p")       #'multi-vterm-prev)
-	(evil-define-key 'normal vterm-mode-map (kbd "i")        #'evil-insert-resume)
-	(evil-define-key 'normal vterm-mode-map (kbd "o")        #'evil-insert-resume)
-	(evil-define-key 'normal vterm-mode-map (kbd "<return>") #'evil-insert-resume))
 #+end_src
 
 ** Zoom
@@ -849,6 +797,7 @@ Rainbow colored parentheses
 (use-package rainbow-delimiters
   :hook ((emacs-lisp-mode . rainbow-delimiters-mode)
          (clojure-mode . rainbow-delimiters-mode)))
+(rainbow-delimiters-mode)
 #+end_src
 
 ** Rainbow Mode
@@ -883,6 +832,11 @@ Display the actual color as a background for hex colors like #ffffff. prog-mode 
 #+end_src
 
 ** Modeline
+Need nerd icons
+#+begin_src sh
+M-x nerd-icons-install-fonts
+#+end_src
+Install with command above in emacs
 #+begin_src emacs-lisp
   (use-package doom-modeline
     :init (doom-modeline-mode 1))

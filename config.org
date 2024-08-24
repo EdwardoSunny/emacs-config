@@ -818,7 +818,7 @@ Display the actual color as a background for hex colors like #ffffff. prog-mode 
     (setq dashboard-center-content t) ;; set to 't' for centered content
     (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
     ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-    (setq dashboard-startup-banner "/home/edward/.emacs.d/img/nerv.png")  ;; use custom image as banner
+    (setq dashboard-startup-banner "~/.emacs.d/img/nerv.png")  ;; use custom image as banner
     (setq dashboard-items '((recents . 5)
                             ;; (agenda . 5 )
                             (bookmarks . 3)

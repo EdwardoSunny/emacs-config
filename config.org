@@ -23,6 +23,7 @@
 - [[#ide-set-up][IDE Set up]]
   - [[#magit][Magit]]
   - [[#lsp-mode][LSP Mode]]
+  - [[#lsp-for-cc][LSP For C/C++]]
   - [[#lsp-for-python][LSP for Python]]
   - [[#python-mode][Python Mode]]
   - [[#company][Company]]
@@ -457,17 +458,23 @@ Don't put backups in the project directory, too cluttered
 ** Set Environment Variable 
 Put anything you want on emacs' exec path here to be seen by emacs, otherwise will not be seen and won't work
 #+begin_src emacs-lisp
-(add-to-list 'exec-path "/home/edward/.local/bin")
+(add-to-list 'exec-path "~/.local/bin")
 #+end_src
 
 * IDE Set up
 Configuration for using emacs as a IDE
 ** Magit
 #+begin_src emacs-lisp
-(use-package magit)
+(use-package magit
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(use-package evil-magit
+  :after magit)
 #+end_src
 
 ** LSP Mode
+Everything you need for any language is avaliable [[https://emacs-lsp.github.io/lsp-mode/page/installation/][here.]]
 *** Activating LSP-mode
 #+begin_src emacs-lisp
   (use-package lsp-mode 
@@ -482,7 +489,28 @@ Configuration for using emacs as a IDE
   )
 #+end_src
 
+** LSP For C/C++
+I write code in C/C++ for class and for ROS.
+*** Install clangd
+clangd is a LSP server for C/C++. On Ubuntu/debian
+#+begin_src bash 
+sudo apt-get install clangd-12
+#+end_src
+
+If that’s not found, at least clangd-9 or clangd-8 should be available. Versions before 8 were part of the clang-tools package.
+
+This will install clangd as /usr/bin/clangd-12. Make it the default clangd:
+#+begin_src bash
+sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
+#+end_src
+*** C/C++ Mode with LSP
+#+begin_src emacs-lisp
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
+#+end_src
+
 ** LSP for Python
+I use python for research. My most used language, must have support for a lot of stuff like virtualenv lsp support, notebook files interactive support, etc.
 *** Install lsp-jedi 
 Install jedi lsp server on your machine first
 
@@ -559,12 +587,33 @@ For python, ensure python-pylint is installed. Install with pip install pylint
 #+end_src
 
 ** Projectile
+Project management with emacs.
+
+Install ripgrep for fast project wide grep (SPC-p-s-r). Needs rust:
+#+begin_src bash
+sudo apt-get install ripgrep
+#+end_src
+
+Keybinds mapped to SPC p as command map (in general.el section).
 #+begin_src emacs-lisp
 (use-package projectile
-    :config
-(projectile-mode 1)
-)
+  :straight t
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/Documents/Code")
+    (setq projectile-project-search-path '("~/Documents/Code")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
 #+end_src
+
+Common keybinds:
+- SPC p p to switch projects
+- SPC p f to do project wide fuzzy file search 
 
 ** EIN Jupyter Notebooks
 Package that allows emacs to edit and run .ipynb files and behave like wrapper around jupyter notebooks/lab.
@@ -681,16 +730,16 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
         "b p"   '(previous-buffer :which-key "previous buffer")
         "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
         "b D"   '(kill-buffer :which-key "kill buffer")
-    ;; search 
+        ;; search 
         "/" '(swiper :wk "swiper search")
-    ;; comment 
+        ;; comment 
         "c c" '(comment-line :wk "comment lines")
-    ;; help 
+        ;; help 
         "h" '(:ignore t :wk "help")
         "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
         "hv" '(describe-variable :wk "describe variable")
         "h r r" '(reload-init-file :wk "reload emacs config")
-    ;; themes 
+        ;; themes 
         "t"  '(:ignore t :wk "toggles")
         "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
         ;; file navigation 
@@ -725,12 +774,14 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
         "ot" '(eshell :wk "open eshell")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+        ;; projectile
+        "p" `(projectile-command-map :wk "Projectile command map")
         ;; AUCTex bindings
         ;; previewing 
         "lpp" '(preview-buffer :wk "preview current latex buffer") 
         "lpa" '(preview-at-point :wk "toggle latex preview at point") 
         "lpd" '(preview-document :wk "preview current latex document") 
-        ;; compiling
+        ;; compiling latex
         "lca" '(TeX-command-run-all :wk "compile current document") 
         )
   )

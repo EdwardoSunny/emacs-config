@@ -358,9 +358,14 @@ any other key exits this function."
 
 (setq backup-directory-alist '((".*" . "~/.local/share/Trash/files")))
 
-(add-to-list 'exec-path "/home/edward/.local/bin")
+(add-to-list 'exec-path "~/.local/bin")
 
-(use-package magit)
+(use-package magit
+  :custom
+  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+(use-package evil-magit
+  :after magit)
 
 (use-package lsp-mode 
   :init
@@ -372,6 +377,9 @@ any other key exits this function."
          (lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
 )
+
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
 
 (use-package lsp-jedi
   :straight t)
@@ -407,9 +415,18 @@ any other key exits this function."
   :init (global-flycheck-mode))
 
 (use-package projectile
-    :config
-(projectile-mode 1)
-)
+  :straight t
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :custom ((projectile-completion-system 'ivy))
+  :init
+  ;; NOTE: Set this to the folder where you keep your Git repos!
+  (when (file-directory-p "~/Documents/Code")
+    (setq projectile-project-search-path '("~/Documents/Code")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package counsel-projectile
+  :config (counsel-projectile-mode))
 
 (use-package ein)
 
@@ -451,16 +468,16 @@ any other key exits this function."
         "b p"   '(previous-buffer :which-key "previous buffer")
         "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
         "b D"   '(kill-buffer :which-key "kill buffer")
-    ;; search 
+        ;; search 
         "/" '(swiper :wk "swiper search")
-    ;; comment 
+        ;; comment 
         "c c" '(comment-line :wk "comment lines")
-    ;; help 
+        ;; help 
         "h" '(:ignore t :wk "help")
         "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
         "hv" '(describe-variable :wk "describe variable")
         "h r r" '(reload-init-file :wk "reload emacs config")
-    ;; themes 
+        ;; themes 
         "t"  '(:ignore t :wk "toggles")
         "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
         ;; file navigation 
@@ -495,12 +512,14 @@ any other key exits this function."
         "ot" '(eshell :wk "open eshell")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+        ;; projectile
+        "p" `(projectile-command-map :wk "Projectile command map")
         ;; AUCTex bindings
         ;; previewing 
         "lpp" '(preview-buffer :wk "preview current latex buffer") 
         "lpa" '(preview-at-point :wk "toggle latex preview at point") 
         "lpd" '(preview-document :wk "preview current latex document") 
-        ;; compiling
+        ;; compiling latex
         "lca" '(TeX-command-run-all :wk "compile current document") 
         )
   )

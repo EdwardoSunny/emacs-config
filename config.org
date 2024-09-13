@@ -573,6 +573,14 @@ Must have ran pip install virtualenv before for jedi install server to work prop
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 #+end_src
 
+*** Making Eshell Usable In Remote Sessions
+#+begin_src emacs-lisp
+(defun my-eshell-init ()
+  (company-mode -1))
+
+(add-hook 'eshell-mode-hook #'my-eshell-init) ;; disable company in eshell mode
+#+end_src
+
 ** Flycheck 
 Syntax checking frameworks for various languages. Basic syntax issue highlighting in code.
 
@@ -609,11 +617,14 @@ Keybinds mapped to SPC p as command map (in general.el section).
 
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
+
+(setq projectile-mode-line "Projectile") ;; disable modeline projectile, otherwise remote connections will have massive latency
 #+end_src
 
 Common keybinds:
 - SPC p p to switch projects
 - SPC p f to do project wide fuzzy file search 
+- SPC p s g to do project wide grep
 
 ** EIN Jupyter Notebooks
 Package that allows emacs to edit and run .ipynb files and behave like wrapper around jupyter notebooks/lab.

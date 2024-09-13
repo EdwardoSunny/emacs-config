@@ -409,6 +409,11 @@ any other key exits this function."
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
+(defun my-eshell-init ()
+  (company-mode -1))
+
+(add-hook 'eshell-mode-hook #'my-eshell-init) ;; disable company in eshell mode
+
 (use-package flycheck
   :defer t
   :diminish
@@ -427,6 +432,8 @@ any other key exits this function."
 
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
+
+(setq projectile-mode-line "Projectile") ;; disable modeline projectile, otherwise remote connections will have massive latency
 
 (use-package ein)
 

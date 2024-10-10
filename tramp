@@ -1,4 +1,4 @@
-;; -*- emacs-lisp -*- <24/09/12 07:14:02 ~/.emacs.d/tramp>
+;; -*- emacs-lisp -*- <24/10/09 18:50:05 ~/.emacs.d/tramp>
 ;; Tramp connection history.  Don't change this file.
 ;; Run `M-x tramp-cleanup-all-connections' instead.
 
@@ -68,4 +68,39 @@
   ("ls--quoting-style=literal --show-control-chars" "--quoting-style=literal --show-control-chars")
   ("ls--dired" "--dired")
   ("df-blocksize" 1)
-  ("df" "\\df --block-size=1 --output=size,used,avail")))
+  ("df" "\\df --block-size=1 --output=size,used,avail"))
+ ((tramp-file-name "ssh" "edward" nil "scai3.cs.ucla.edu" nil nil nil)
+  ("null-device" "/dev/null")
+  ("uname" "Linux 6.2.0-26-generic")
+  ("locale" "LC_ALL=en_US.utf8")
+  ("test" "test")
+  ("remote-path"
+   ("/bin" "/usr/bin" "/sbin" "/usr/sbin" "/usr/local/bin" "/usr/local/sbin"))
+  ("pipe-buf" 4096)
+  ("remote-shell" "/bin/sh")
+  ("file-exists" "test -e")
+  ("case-insensitive" nil)
+  ("~" "/home/edward")
+  ("perl-file-spec" t)
+  ("perl-cwd-realpath" t)
+  ("perl" "\\perl")
+  ("stat" "env QUOTING_STYLE=locale \\stat")
+  ("id" "/bin/id")
+  ("uid-integer" 24902)
+  ("uid-string" "edward")
+  ("gid-integer" 64)
+  ("gid-string" "grads")
+  ("groups-integer"
+   (64))
+  ("groups-string"
+   ("grads"))
+  ("readlink" "\\readlink")
+  ("ls" "/bin/ls --color=never")
+  ("ls--quoting-style=literal --show-control-chars" "--quoting-style=literal --show-control-chars")
+  ("ls--dired" "--dired")
+  ("df-blocksize" 1)
+  ("df" "\\df --block-size=1 --output=size,used,avail")
+  ("/usr/bin/bzr" nil)
+  ("git" "\\git")
+  ("hg" nil)
+  ("ln" "\\ln")))

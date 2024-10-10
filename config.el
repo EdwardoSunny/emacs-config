@@ -96,6 +96,34 @@
 
   (eshell-git-prompt-use-theme 'powerline))
 
+(setopt eshell-prompt-function `fancy-shell)
+(setopt eshell-prompt-regexp "^[^#$\n]* [$#] ")
+(setopt eshell-highlight-prompt nil)
+
+(setq company-global-modes `(not eshell-mode))
+
+(use-package eshell-syntax-highlighting
+  :after esh-mode
+  :config
+  (eshell-syntax-highlighting-global-mode +1))
+
+(use-package eshell-toggle
+:custom
+(eshell-toggle-size-fraction 3)
+(eshell-toggle-use-projectile-root t)
+(eshell-toggle-run-command nil)
+;; (eshell-toggle-init-function 
+;;  #'eshell-toggle-init-ansi-term)
+)
+
+(defun eshell-new (name)
+"Create new eshell buffer named NAME."
+(interactive "sName: ")
+(setq name (concat "$" name))
+(eshell)
+(rename-buffer name)
+)
+
 (use-package which-key
   :init
     (which-key-mode 1)
@@ -344,7 +372,7 @@ any other key exits this function."
   (persp-mode)
   :config
   ;; Sets a file to write to when we save states
-  (setq persp-state-default-file "~/.config/emacs/sessions"))
+  (setq persp-state-default-file "~/.emacs.d/sessions"))
 
 ;; This will group buffers by persp-name in ibuffer.
 (add-hook 'ibuffer-hook
@@ -516,7 +544,8 @@ any other key exits this function."
         "wK" '(buf-move-up :wk "move window up")
         "wL" '(buf-move-right :wk "windmove-right")
         ;; terminal
-        "ot" '(eshell :wk "open eshell")
+        "ot" '(eshell-toggle :wk "toggle eshell")
+        "oT" '(eshell-new :wk "open new eshell")
         ;; perspective.el workspaces
         "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
         ;; projectile
@@ -528,6 +557,8 @@ any other key exits this function."
         "lpd" '(preview-document :wk "preview current latex document") 
         ;; compiling latex
         "lca" '(TeX-command-run-all :wk "compile current document") 
+         ;; speedbar "file tree"
+        "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
         )
   )
 
@@ -671,6 +702,11 @@ any other key exits this function."
                    `(lambda (c)
                   (if (char-equal c ?<) t (,electric-pair-inhibit-predicate c))))))
 (global-auto-revert-mode t)  ;; Automatically show changes if the file has changed
+
+(add-hook 'minibuffer-inactive-mode-hook (lambda () (auto-revert-mode -1)))
+
+(setq auto-revert-remote-files nil)
+
 (global-display-line-numbers-mode 1) ;; Display line numbers
 (global-visual-line-mode t)  ;; Enable truncated lines
 (menu-bar-mode -1)           ;; Disable the menu bar 

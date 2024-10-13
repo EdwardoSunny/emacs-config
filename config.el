@@ -409,15 +409,17 @@ any other key exits this function."
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c++-mode-hook 'lsp)
 
-(use-package lsp-jedi
-  :straight t)
+(use-package elpy
+  :straight t
+  :init
+  (elpy-enable))
 
 (use-package python-mode
   :straight nil
   :hook (python-mode . lsp-deferred) ;; when open python file, turn on LSP mode
 )
 
-(setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
+;; (setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
 
 (use-package company
     :after lsp-mode
@@ -576,7 +578,7 @@ any other key exits this function."
 (global-set-key [escape] `keyboard-escape-quit)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'timu-caribbean t)
+(load-theme 'dracula t)
 
 (setq visible-bell nil)
 (menu-bar-mode -1) 

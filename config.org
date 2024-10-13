@@ -538,29 +538,12 @@ sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
 
 ** LSP for Python
 I use python for research. My most used language, must have support for a lot of stuff like virtualenv lsp support, notebook files interactive support, etc.
-*** Install lsp-jedi 
-Install jedi lsp server on your machine first
-
-#+begin_src bash
-pip install -U jedi-language-server
-#+end_src
-
-
-*** LSP Jedi
+*** Install elpy 
 #+begin_src emacs-lisp
-(use-package lsp-jedi
-  :straight t)
-#+end_src
-
-Then install virtualenv (required):
-#+begin_src bash
-pip install virtualenv
-#+end_src
-
-
-Then run:
-#+begin_src 
-M-x jedi:install-server
+(use-package elpy
+  :straight t
+  :init
+  (elpy-enable))
 #+end_src
 
 ** Python Mode
@@ -571,7 +554,7 @@ Python mode should be included with emacs
   :hook (python-mode . lsp-deferred) ;; when open python file, turn on LSP mode
 )
 
-(setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
+;; (setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
 #+end_src
 
 ** Company
@@ -855,7 +838,7 @@ Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single p
 ** Theme
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-  (load-theme 'timu-caribbean t)
+  (load-theme 'dracula t)
 #+end_src
 
 ** Minimize Clutter

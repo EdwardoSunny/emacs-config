@@ -414,6 +414,10 @@ any other key exits this function."
   :init
   (elpy-enable))
 
+(setq lsp-pylsp-server-command "pylsp")
+(setq lsp-ruff-lsp-server-command "ruff-lsp")
+(add-hook 'python-mode-hook #'lsp-deferred)
+
 (use-package python-mode
   :straight nil
   :hook (python-mode . lsp-deferred) ;; when open python file, turn on LSP mode
@@ -466,6 +470,8 @@ any other key exits this function."
 (setq projectile-mode-line "Projectile") ;; disable modeline projectile, otherwise remote connections will have massive latency
 
 (use-package ein)
+
+(setq tramp-default-method "ssh")
 
 (use-package auctex)
 

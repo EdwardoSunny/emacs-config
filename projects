@@ -1,2 +1,3 @@
 ;;; -*- lisp-data -*-
-(("/home/edward/.emacs.d/"))
+(("/ssh:edward@scai3.cs.ucla.edu:/data1/edward/GO-Explore-Experiments/gap3-go/")
+ ("/home/edward/.emacs.d/"))

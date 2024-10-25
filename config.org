@@ -30,6 +30,7 @@
   - [[#flycheck][Flycheck]]
   - [[#projectile][Projectile]]
   - [[#ein-jupyter-notebooks][EIN Jupyter Notebooks]]
+  - [[#tramp][Tramp]]
 - [[#latex-editing][LaTex Editing]]
   - [[#auctex][AUCTex]]
   - [[#company-math][Company Math]]
@@ -544,6 +545,10 @@ I use python for research. My most used language, must have support for a lot of
   :straight t
   :init
   (elpy-enable))
+
+(setq lsp-pylsp-server-command "pylsp")
+(setq lsp-ruff-lsp-server-command "ruff-lsp")
+(add-hook 'python-mode-hook #'lsp-deferred)
 #+end_src
 
 ** Python Mode
@@ -693,6 +698,11 @@ pyenv activate tfenv
 pip install tensorflow # install wanted packages
 ipython kernel install --user --name tfenv # add the env as a kernel
 # now any packages installed in tfenv will be reflected in the tfenv kernel for jupyter
+#+end_src
+
+** Tramp
+#+begin_src emacs-lisp
+(setq tramp-default-method "ssh")
 #+end_src
 
 * LaTex Editing

@@ -549,6 +549,20 @@ I use python for research. My most used language, must have support for a lot of
 (setq lsp-pylsp-server-command "pylsp")
 (setq lsp-ruff-lsp-server-command "ruff-lsp")
 (add-hook 'python-mode-hook #'lsp-deferred)
+
+(elpy-enable)
+
+   ;; A python shell for every buffer
+(add-hook 'elpy-mode-hook (lambda () (elpy-shell-toggle-dedicated-shell 1)))
+
+   ;;(add-hook 'python-mode-hook #'python-cello-mode 1)
+   (setq python-shell-interpreter "ipython3"
+            python-shell-interpreter-args "--simple-prompt -i --pylab=qt5")
+
+   ;; Real time syntax check in python
+   (when (require 'flycheck nil t)
+         (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+         (add-hook 'elpy-mode-hook 'flycheck-mode))
 #+end_src
 
 ** Python Mode
@@ -848,7 +862,7 @@ Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single p
 ** Theme
 #+begin_src emacs-lisp
   (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-  (load-theme 'dracula t)
+  (load-theme 'modus-vivendi t)
 #+end_src
 
 ** Minimize Clutter

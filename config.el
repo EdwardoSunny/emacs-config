@@ -418,6 +418,20 @@ any other key exits this function."
 (setq lsp-ruff-lsp-server-command "ruff-lsp")
 (add-hook 'python-mode-hook #'lsp-deferred)
 
+(elpy-enable)
+
+   ;; A python shell for every buffer
+(add-hook 'elpy-mode-hook (lambda () (elpy-shell-toggle-dedicated-shell 1)))
+
+   ;;(add-hook 'python-mode-hook #'python-cello-mode 1)
+   (setq python-shell-interpreter "ipython3"
+            python-shell-interpreter-args "--simple-prompt -i --pylab=qt5")
+
+   ;; Real time syntax check in python
+   (when (require 'flycheck nil t)
+         (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+         (add-hook 'elpy-mode-hook 'flycheck-mode))
+
 (use-package python-mode
   :straight nil
   :hook (python-mode . lsp-deferred) ;; when open python file, turn on LSP mode
@@ -584,7 +598,7 @@ any other key exits this function."
 (global-set-key [escape] `keyboard-escape-quit)
 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
-(load-theme 'dracula t)
+(load-theme 'modus-vivendi t)
 
 (setq visible-bell nil)
 (menu-bar-mode -1) 

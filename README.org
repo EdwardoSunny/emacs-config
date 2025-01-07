@@ -1,6 +1,4 @@
 * My Literate Emacs Config
 [[./img/sc.png]]
 
-Couldn't really understand how to deal with bugs when I used Doom Emacs, so I decided to write my own literate config to learn how emacs really works. 
-
-Still work in progress.
+WIP!

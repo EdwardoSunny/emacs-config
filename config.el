@@ -554,6 +554,11 @@ any other key exits this function."
         "ws" '(evil-window-split  :wk "split-window-below")
         "wd" '(evil-window-delete :wk "delete-window")
         "wD" '(delete-other-windows :wk "delete-other-windows")
+        ;; resize windows
+        "w[" '(evil-window-decrease-width :wk "decrease-window-width")
+        "w]" '(evil-window-increase-width :wk "increase-window-width")
+        "w-" '(evil-window-decrease-height :wk "decrease-window-height")
+        "w=" '(evil-window-increase-height :wk "increase-window-height")
         ;; navigation 
         "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
         "wj" '(evil-window-down :wk "windmove-down")

@@ -11,3 +11,4 @@ eln-cache/
 sessions
 elpy/
 .cache/
+.lsp-session-*

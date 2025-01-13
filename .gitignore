@@ -10,3 +10,4 @@ eshell/
 eln-cache/
 sessions
 elpy/
+.cache/

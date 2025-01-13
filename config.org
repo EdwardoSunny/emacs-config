@@ -540,6 +540,9 @@ sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
 ** LSP for Python
 I use python for research. My most used language, must have support for a lot of stuff like virtualenv lsp support, notebook files interactive support, etc.
 *** Install elpy 
+After a new clone, don't forget to run elpy-rpc-reinstall-virtualenv, otherwise will get sentinel error on every keypress lmao
+- also ensure your system has python3-venv installed
+
 #+begin_src emacs-lisp
 (use-package elpy
   :straight t
@@ -566,6 +569,8 @@ I use python for research. My most used language, must have support for a lot of
 #+end_src
 
 ** Python Mode
+Install the LSP server with pip install "python-lsp-server[all]"
+
 Python mode should be included with emacs
 #+begin_src emacs-lisp
 (use-package python-mode

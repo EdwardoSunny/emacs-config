@@ -414,7 +414,7 @@ any other key exits this function."
     (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
     (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
 
-(setq copilot-idle-delay 0.2)
+;; (setq copilot-idle-delay 0.2)
 
 (use-package magit
   :custom

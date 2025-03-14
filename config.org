@@ -493,7 +493,7 @@ Put anything you want on emacs' exec path here to be seen by emacs, otherwise wi
 * IDE Set up
 Configuration for using emacs as a IDE
 ** Codeium Copilot
-As a senior chat engineer, copilots are very nice. Codeium is a free verison of github copilot.
+As a senior L11 prompt engineer, copilots are very nice. Codeium is a free verison of github copilot.
 #+begin_src emacs-lisp
 ;; (straight-use-package '(codeium :type git :host github :repo "Exafunction/codeium.el"))
 #+end_src

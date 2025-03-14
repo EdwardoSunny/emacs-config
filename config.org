@@ -493,6 +493,8 @@ Put anything you want on emacs' exec path here to be seen by emacs, otherwise wi
 * IDE Set up
 Configuration for using emacs as a IDE
 ** Copilot
+Requires your system wide node installation is at least 22. =nvm= doesn't work as emacs uses only system wide installation.
+
 #+begin_src emacs-lisp
 (straight-use-package 'jsonrpc)
 

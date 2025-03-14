@@ -13,5 +13,6 @@ elpy/
 .cache/
 .lsp-session-*
 codeium/
-projects/
-tramp/
+projects
+tramp
+

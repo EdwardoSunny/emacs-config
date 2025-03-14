@@ -15,4 +15,6 @@ elpy/
 codeium/
 projects
 tramp
+request/
+transient/
 

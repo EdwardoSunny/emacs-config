@@ -21,6 +21,7 @@
   - [[#backups][Backups]]
   - [[#set-environment-variable][Set Environment Variable]]
 - [[#ide-set-up][IDE Set up]]
+  - [[#copilot][Copilot]]
   - [[#magit][Magit]]
   - [[#lsp-mode][LSP Mode]]
   - [[#lsp-for-cc][LSP For C/C++]]
@@ -491,6 +492,39 @@ Put anything you want on emacs' exec path here to be seen by emacs, otherwise wi
 
 * IDE Set up
 Configuration for using emacs as a IDE
+** Copilot
+#+begin_src emacs-lisp
+(straight-use-package 'jsonrpc)
+
+;; Install f (file manipulation library)
+(straight-use-package 'f)
+
+;; Install s (string manipulation library)
+(straight-use-package 's)
+
+;; Install dash (list manipulation library)
+(straight-use-package 'dash)
+
+;; Install editorconfig
+(straight-use-package 'editorconfig)
+(editorconfig-mode 1)
+#+end_src
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/.emacs.d/github-copilot")
+(require 'copilot)
+    ;; Enable in programming modes
+    (add-hook 'prog-mode-hook 'copilot-mode)
+
+    ;; Define key bindings
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
+    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
+
+(setq copilot-idle-delay 0.2)
+#+end_src
+
 ** Magit
 #+begin_src emacs-lisp
 (use-package magit
@@ -605,6 +639,11 @@ Must have ran pip install virtualenv before for jedi install server to work prop
   (add-to-list 'company-backends 'company-jedi))
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
+
+;; If you're using company-mode with company-box 
+(use-package company-box
+  :ensure t
+  :hook (company-mode . company-box-mode))
 #+end_src
 
 *** Making Eshell Usable In Remote Sessions

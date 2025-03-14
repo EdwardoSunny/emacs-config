@@ -388,6 +388,34 @@ any other key exits this function."
 
 (add-to-list 'exec-path "~/.local/bin")
 
+(straight-use-package 'jsonrpc)
+
+;; Install f (file manipulation library)
+(straight-use-package 'f)
+
+;; Install s (string manipulation library)
+(straight-use-package 's)
+
+;; Install dash (list manipulation library)
+(straight-use-package 'dash)
+
+;; Install editorconfig
+(straight-use-package 'editorconfig)
+(editorconfig-mode 1)
+
+(add-to-list 'load-path "~/.emacs.d/github-copilot")
+(require 'copilot)
+    ;; Enable in programming modes
+    (add-hook 'prog-mode-hook 'copilot-mode)
+
+    ;; Define key bindings
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
+    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
+
+(setq copilot-idle-delay 0.2)
+
 (use-package magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
@@ -456,6 +484,11 @@ any other key exits this function."
   (add-to-list 'company-backends 'company-jedi))
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
+
+;; If you're using company-mode with company-box 
+(use-package company-box
+  :ensure t
+  :hook (company-mode . company-box-mode))
 
 (defun my-eshell-init ()
   (company-mode -1))

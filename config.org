@@ -493,6 +493,8 @@ Put anything you want on emacs' exec path here to be seen by emacs, otherwise wi
 * IDE Set up
 Configuration for using emacs as a IDE
 ** Copilot
+As a L11 senior prompt engineer, having copilot makes life a lot easier and code a lot faster.
+
 Requires your system wide node installation is at least 22. =nvm= doesn't work as emacs uses only system wide installation.
 
 #+begin_src emacs-lisp
@@ -576,8 +578,8 @@ sudo update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-12 100
 ** LSP for Python
 I use python for research. My most used language, must have support for a lot of stuff like virtualenv lsp support, notebook files interactive support, etc.
 *** Install elpy 
-After a new clone, don't forget to run elpy-rpc-reinstall-virtualenv, otherwise will get sentinel error on every keypress lmao
-- also ensure your system has python3-venv installed
+After a new clone, don't forget to run =M-x elpy-rpc-reinstall-virtualenv=, otherwise will get sentinel error on every keypress lmao
+- also ensure your system has =python3-venv= installed
 
 #+begin_src emacs-lisp
 (use-package elpy
@@ -605,7 +607,7 @@ After a new clone, don't forget to run elpy-rpc-reinstall-virtualenv, otherwise 
 #+end_src
 
 ** Python Mode
-Install the LSP server with pip install "python-lsp-server[all]"
+Install the LSP server with =pip install "python-lsp-server[all]"=
 
 Python mode should be included with emacs
 #+begin_src emacs-lisp
@@ -622,7 +624,9 @@ Text completion framework. Completion starts after type few letters.
 
 Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
 
-Must have ran pip install virtualenv before for jedi install server to work properly
+Must have ran =pip install virtualenv= before for =M-x jedi:install-server= to work properly.
+
+If you ever get the error like "rpc sentinel died", means your jedi server is dead/not working properly. Usually this can be fixed with running =M-x jedi:reinstall-server=.
 #+begin_src emacs-lisp
   (use-package company
     :after lsp-mode
@@ -642,7 +646,7 @@ Must have ran pip install virtualenv before for jedi install server to work prop
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
-;; If you're using company-mode with company-box 
+;; company box enables a box with icons to show up during competion much like vscode completions.
 (use-package company-box
   :ensure t
   :hook (company-mode . company-box-mode))

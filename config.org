@@ -495,7 +495,13 @@ Configuration for using emacs as a IDE
 ** Copilot
 As a L11 senior prompt engineer, having copilot makes life a lot easier and code a lot faster.
 
-Requires your system wide node installation is at least 22. =nvm= doesn't work as emacs uses only system wide installation.
+Requires your system wide node installation is at least 22. =nvm= doesn't work as emacs uses only system wide installation. On ubuntu, you can do this by:
+#+begin_src bash
+curl -sL https://deb.nodesource.com/setup_22.x | sudo bash -
+sudo apt-get install -y nodejs
+#+end_src
+
+Then when emacs first starts, run =M-x copilot-install-server=. Log into copilot by =M-x copilot-login=.
 
 #+begin_src emacs-lisp
 (straight-use-package 'jsonrpc)

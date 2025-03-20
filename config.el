@@ -485,7 +485,7 @@ any other key exits this function."
 
 (add-hook 'python-mode-hook 'my/python-mode-hook)
 
-;; If you're using company-mode with company-box 
+;; company box enables a box with icons to show up during competion much like vscode completions.
 (use-package company-box
   :ensure t
   :hook (company-mode . company-box-mode))

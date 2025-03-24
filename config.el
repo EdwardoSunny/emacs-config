@@ -520,6 +520,19 @@ any other key exits this function."
 
 (setq tramp-default-method "ssh")
 
+(defun visit-remote-project-1 ()
+  (interactive)
+  (find-file "/ssh:edward@uril-1.cs.ucla.edu:~/"))
+(defun visit-remote-project-2 ()
+  (interactive)
+  (find-file "/ssh:ubuntu@192.222.54.245:~/"))
+(defun visit-remote-project-3 ()
+  (interactive)
+  (find-file "/ssh:edward@scai3.cs.ucla.edu:~/"))
+(defun visit-remote-project-4 ()
+  (interactive)
+  (find-file "/ssh:edward@scai4.cs.ucla.edu:~/"))
+
 (use-package auctex)
 
 (setq TeX-auto-save t)
@@ -619,6 +632,11 @@ any other key exits this function."
         "lca" '(TeX-command-run-all :wk "compile current document") 
          ;; speedbar "file tree"
         "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
+	;; ssh
+        "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
+        "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
+        "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
+        "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
         )
   )
 

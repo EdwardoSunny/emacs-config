@@ -525,13 +525,18 @@ any other key exits this function."
   (find-file "/ssh:edward@uril-1.cs.ucla.edu:~/"))
 (defun visit-remote-project-2 ()
   (interactive)
-  (find-file "/ssh:ubuntu@192.222.54.245:~/"))
+  (find-file "/ssh:edward@scai3.cs.ucla.edu:~/"))
 (defun visit-remote-project-3 ()
   (interactive)
-  (find-file "/ssh:edward@scai3.cs.ucla.edu:~/"))
+  (find-file "/ssh:edward@scai4.cs.ucla.edu:~/"))
+
+;; ad hoc servers (lambda) go last so easier to remove/add
 (defun visit-remote-project-4 ()
   (interactive)
-  (find-file "/ssh:edward@scai4.cs.ucla.edu:~/"))
+  (find-file "/ssh:ubuntu@192.222.54.245:~/"))
+(defun visit-remote-project-5 ()
+  (interactive)
+  (find-file "/ssh:ubuntu@104.171.203.34:~/"))
 
 (use-package auctex)
 
@@ -637,6 +642,7 @@ any other key exits this function."
         "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
         "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
         "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
+        "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
         )
   )
 

@@ -630,8 +630,16 @@ any other key exits this function."
         "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
         "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
         "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
-        )
+	;; org
+	"ol"  '(org-insert-link :wk "org insert link")
+	"oc"  '(org-capture :wk "org capture")
+	;; org roam
+	"of"  '(org-roam-node-find :wk "org roam find node")
+	"op"  '(org-roam-node-insert :wk "org roam insert node link")
+
+    )
   )
+
 
    (defun reload-init-file()
       (interactive)
@@ -792,9 +800,6 @@ any other key exits this function."
   :ensure t
   :custom
   (org-roam-directory "~/Notes")
-  :bind (("C-c n l" . org-roam-buffer-toggle)
-         ("C-c n f" . org-roam-node-find)
-         ("C-c n i" . org-roam-node-insert))
   :config
   (org-roam-setup))
 

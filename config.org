@@ -35,11 +35,6 @@
 - [[#latex-editing][LaTex Editing]]
   - [[#auctex][AUCTex]]
   - [[#company-math][Company Math]]
-- [[#key-bindings][Key Bindings]]
-  - [[#generalel-keybindings][General.el Keybindings]]
-  - [[#misc-non-evil-keybindings][Misc Non-evil Keybindings]]
-  - [[#zoom][Zoom]]
-  - [[#minibuffer-escape][Minibuffer Escape]]
 - [[#appearance][Appearance]]
   - [[#theme][Theme]]
   - [[#minimize-clutter][Minimize Clutter]]
@@ -58,6 +53,11 @@
   - [[#org-bullets][Org Bullets]]
   - [[#highlight-todo][Highlight TODO]]
   - [[#quick-block-creation-with-org-tempo][Quick Block Creation with Org Tempo]]
+- [[#key-bindings][Key Bindings]]
+  - [[#generalel-keybindings][General.el Keybindings]]
+  - [[#misc-non-evil-keybindings][Misc Non-evil Keybindings]]
+  - [[#zoom][Zoom]]
+  - [[#minibuffer-escape][Minibuffer Escape]]
 
 * Important Programs to Load First
 ** Straight Package Manager
@@ -829,129 +829,6 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
 (add-hook 'LaTeX-mode-hook 'my-latex-mode-setup)
 (add-hook 'after-init-hook 'global-company-mode)
 #+end_src
-
-* Key Bindings
-** General.el Keybindings
-#+begin_src emacs-lisp
-      (use-package general
-        :config
-        (general-evil-setup t)
-
-(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-        ;; buffers
-        ","   '(ibuffer :which-key "ibuffer")
-        "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-        "b d"   '(kill-current-buffer :which-key "kill current buffer")
-        "b n"   '(next-buffer :which-key "next buffer")
-        "b p"   '(previous-buffer :which-key "previous buffer")
-        "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-        "b D"   '(kill-buffer :which-key "kill buffer")
-        ;; search 
-        "/" '(swiper :wk "swiper search")
-        ;; comment 
-        "c c" '(comment-line :wk "comment lines")
-        ;; help 
-        "h" '(:ignore t :wk "help")
-        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-        "hv" '(describe-variable :wk "describe variable")
-        "h r r" '(reload-init-file :wk "reload emacs config")
-        ;; themes 
-        "t"  '(:ignore t :wk "toggles")
-        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-        ;; file navigation 
-       "."     '(find-file :which-key "find file")
-       "ff"   '(find-file :which-key "find file")
-       "fr"   '(counsel-recentf :which-key "recent files")
-       "fs"   '(save-buffer :which-key "save file")
-       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
-       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
-       "fC"   '(copy-file :which-key "copy file")
-       "fD"   '(delete-file :which-key "delete file")
-       "fR"   '(rename-file :which-key "rename file")
-       "fS"   '(write-file :which-key "save file as...")
-       "fU"   '(sudo-edit :which-key "sudo edit file")
-        ;; windows 
-        "wv" '(evil-window-vsplit :wk "split-window-right")
-        "ws" '(evil-window-split  :wk "split-window-below")
-        "wd" '(evil-window-delete :wk "delete-window")
-        "wD" '(delete-other-windows :wk "delete-other-windows")
-        ;; resize windows
-        "w[" '(evil-window-decrease-width :wk "decrease-window-width")
-        "w]" '(evil-window-increase-width :wk "increase-window-width")
-        "w-" '(evil-window-decrease-height :wk "decrease-window-height")
-        "w=" '(evil-window-increase-height :wk "increase-window-height")
-        ;; navigation 
-        "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
-        "wj" '(evil-window-down :wk "windmove-down")
-        "wk" '(evil-window-up :wk "windmove-up")
-        "wl" '(evil-window-right :wk "windmove-right")
-        "ww" '(evil-window-next :wk "windmove-next")
-        ;; window move
-        "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
-        "wJ" '(buf-move-down :wk "move window down")
-        "wK" '(buf-move-up :wk "move window up")
-        "wL" '(buf-move-right :wk "windmove-right")
-        ;; terminal
-        "ot" '(eshell-toggle :wk "toggle eshell")
-        "oT" '(eshell-new :wk "open new eshell")
-        ;; perspective.el workspaces
-        "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
-        ;; projectile
-        "p" `(projectile-command-map :wk "Projectile command map")
-        ;; AUCTex bindings
-        ;; previewing 
-        "lpp" '(preview-buffer :wk "preview current latex buffer") 
-        "lpa" '(preview-at-point :wk "toggle latex preview at point") 
-        "lpd" '(preview-document :wk "preview current latex document") 
-        ;; compiling latex
-        "lca" '(TeX-command-run-all :wk "compile current document") 
-         ;; speedbar "file tree"
-        "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
-	;; ssh
-        "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
-        "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
-        "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
-        "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
-        "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
-	;; org
-	"oc"  '(org-capture :wk "org capture")
-	;; org roam
-	"of"  '(org-roam-node-find :wk "org roam find node")
-    )
-  )
-
-
-   (defun reload-init-file()
-      (interactive)
-      (load-file user-init-file)
-      (load-file user-init-file)
-  )
-
-#+end_src
-
-** Misc Non-evil Keybindings
-#+begin_src emacs-lisp
-;; regular org
-;; C-c C-l inserts link
-;; org-roam
-(global-set-key (kbd "C-a") 'org-roam-node-insert)
-#+end_src
-
-** Zoom
-For zooming in and out on buffers
-#+begin_src emacs-lisp
-  (global-set-key (kbd "C-=") 'text-scale-increase)
-  (global-set-key (kbd "C--") 'text-scale-decrease)
-  (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
-  (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
-#+end_src
-
-** Minibuffer Escape
-Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single press of escape to quit minibuffer
-#+begin_src emacs-lisp
-(global-set-key [escape] `keyboard-escape-quit)
-#+end_src
-
 * Appearance
 ** Theme
 #+begin_src emacs-lisp
@@ -1149,8 +1026,27 @@ Basic configs:
   :ensure t
   :custom
   (org-roam-directory "~/Notes")
+  (org-roam-completion-everywhere t)
   :config
   (org-roam-setup))
+#+end_src
+*** Org-roam-ui 
+Graph view for org-roam like obsidian
+
+#+begin_src emacs-lisp
+(use-package org-roam-ui
+  :straight
+    (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+    :after org-roam
+;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+;;         a hookable mode anymore, you're advised to pick something yourself
+;;         if you don't care about startup time, use
+    ;; :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
 #+end_src
 ** TOC
 #+begin_src emacs-lisp
@@ -1205,3 +1101,129 @@ From DistroTube's config
 #+begin_src emacs-lisp
 (require `org-tempo)
 #+end_src
+
+* Key Bindings
+** General.el Keybindings
+#+begin_src emacs-lisp
+      (use-package general
+        :config
+        (general-evil-setup t)
+
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+        ;; buffers
+        ","   '(ibuffer :which-key "ibuffer")
+        "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+        "b d"   '(kill-current-buffer :which-key "kill current buffer")
+        "b n"   '(next-buffer :which-key "next buffer")
+        "b p"   '(previous-buffer :which-key "previous buffer")
+        "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+        "b D"   '(kill-buffer :which-key "kill buffer")
+        ;; search 
+        "/" '(swiper :wk "swiper search")
+        ;; comment 
+        "c c" '(comment-line :wk "comment lines")
+        ;; help 
+        "h" '(:ignore t :wk "help")
+        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+        "hv" '(describe-variable :wk "describe variable")
+        "h r r" '(reload-init-file :wk "reload emacs config")
+        ;; themes 
+        "t"  '(:ignore t :wk "toggles")
+        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+        ;; file navigation 
+       "."     '(find-file :which-key "find file")
+       "ff"   '(find-file :which-key "find file")
+       "fr"   '(counsel-recentf :which-key "recent files")
+       "fs"   '(save-buffer :which-key "save file")
+       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+       "fC"   '(copy-file :which-key "copy file")
+       "fD"   '(delete-file :which-key "delete file")
+       "fR"   '(rename-file :which-key "rename file")
+       "fS"   '(write-file :which-key "save file as...")
+       "fU"   '(sudo-edit :which-key "sudo edit file")
+        ;; windows 
+        "wv" '(evil-window-vsplit :wk "split-window-right")
+        "ws" '(evil-window-split  :wk "split-window-below")
+        "wd" '(evil-window-delete :wk "delete-window")
+        "wD" '(delete-other-windows :wk "delete-other-windows")
+        ;; resize windows
+        "w[" '(evil-window-decrease-width :wk "decrease-window-width")
+        "w]" '(evil-window-increase-width :wk "increase-window-width")
+        "w-" '(evil-window-decrease-height :wk "decrease-window-height")
+        "w=" '(evil-window-increase-height :wk "increase-window-height")
+        ;; navigation 
+        "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+        "wj" '(evil-window-down :wk "windmove-down")
+        "wk" '(evil-window-up :wk "windmove-up")
+        "wl" '(evil-window-right :wk "windmove-right")
+        "ww" '(evil-window-next :wk "windmove-next")
+        ;; window move
+        "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
+        "wJ" '(buf-move-down :wk "move window down")
+        "wK" '(buf-move-up :wk "move window up")
+        "wL" '(buf-move-right :wk "windmove-right")
+        ;; terminal
+        "ot" '(eshell-toggle :wk "toggle eshell")
+        "oT" '(eshell-new :wk "open new eshell")
+        ;; perspective.el workspaces
+        "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+        ;; projectile
+        "p" `(projectile-command-map :wk "Projectile command map")
+        ;; AUCTex bindings
+        ;; previewing 
+        "lpp" '(preview-buffer :wk "preview current latex buffer") 
+        "lpa" '(preview-at-point :wk "toggle latex preview at point") 
+        "lpd" '(preview-document :wk "preview current latex document") 
+        ;; compiling latex
+        "lca" '(TeX-command-run-all :wk "compile current document") 
+         ;; speedbar "file tree"
+        "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
+	;; ssh
+        "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
+        "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
+        "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
+        "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
+        "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
+	;; org
+	"oc"  '(org-capture :wk "org capture")
+	;; org roam
+	"of"  '(org-roam-node-find :wk "org roam find node")
+        "ol"  '(org-roam-buffer-toggle :wk "org roam buffer toggle")
+	;; org roam ui
+        "og"  '(org-roam-ui-mode :wk "org roam ui graph")
+    )
+  )
+
+   (defun reload-init-file()
+      (interactive)
+      (load-file user-init-file)
+      (load-file user-init-file)
+  )
+
+#+end_src
+
+** Misc Non-evil Keybindings
+#+begin_src emacs-lisp
+;; regular org
+;; C-c C-l inserts link
+(global-set-key (kbd "C-SPC") 'completion-at-point)
+;; org-roam
+(global-set-key (kbd "C-a") 'org-roam-node-insert)
+#+end_src
+
+** Zoom
+For zooming in and out on buffers
+#+begin_src emacs-lisp
+  (global-set-key (kbd "C-=") 'text-scale-increase)
+  (global-set-key (kbd "C--") 'text-scale-decrease)
+  (global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+  (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+#+end_src
+
+** Minibuffer Escape
+Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single press of escape to quit minibuffer
+#+begin_src emacs-lisp
+(global-set-key [escape] `keyboard-escape-quit)
+#+end_src
+

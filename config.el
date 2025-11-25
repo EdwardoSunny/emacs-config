@@ -1,18 +1,3 @@
-(defvar bootstrap-version)
-(let ((bootstrap-file
-       (expand-file-name
-        "straight/repos/straight.el/bootstrap.el"
-        (or (bound-and-true-p straight-base-dir)
-            user-emacs-directory)))
-      (bootstrap-version 7))
-  (unless (file-exists-p bootstrap-file)
-    (with-current-buffer
-        (url-retrieve-synchronously
-         "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-         'silent 'inhibit-cookies)
-      (goto-char (point-max))
-      (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
@@ -96,7 +81,6 @@
 
   (eshell-git-prompt-use-theme 'powerline))
 
-(setopt eshell-prompt-function `fancy-shell)
 (setopt eshell-prompt-regexp "^[^#$\n]* [$#] ")
 (setopt eshell-highlight-prompt nil)
 
@@ -434,6 +418,9 @@ any other key exits this function."
   :commands lsp
 )
 
+;; Suppress native compilation warnings
+(setq native-comp-async-report-warnings-errors 'silent)
+
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c++-mode-hook 'lsp)
 
@@ -533,7 +520,7 @@ any other key exits this function."
 ;; ad hoc servers (lambda) go last so easier to remove/add
 (defun visit-remote-project-4 ()
   (interactive)
-  (find-file "/ssh:ubuntu@192.222.54.245:~/"))
+  (find-file "/ssh:u-ril@192.168.0.69:~/"))
 (defun visit-remote-project-5 ()
   (interactive)
   (find-file "/ssh:ubuntu@104.171.203.34:~/"))
@@ -797,6 +784,19 @@ any other key exits this function."
 (scroll-bar-mode -1)         ;; Disable the scroll bar
 (tool-bar-mode -1)           ;; Disable the tool bar
 (setq org-edit-src-content-indentation 0) ;; Set src block automatic indent to 0 instead of 2.
+
+(use-package org-roam
+  :ensure t)
+
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory "~/Notes")
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert))
+  :config
+  (org-roam-setup))
 
 (use-package toc-org
     :commands toc-org-enable

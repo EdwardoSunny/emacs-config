@@ -61,9 +61,6 @@
 
 * Important Programs to Load First
 ** Straight Package Manager
-Ol' reliable...
-
-Tried elpaca but was very unstable project. For instance, could not download AUCTex. Straight stable and no issues so far.
 This is loaded in init.el before org-babel-load-file is called.
 
 #+begin_src emacs-lisp

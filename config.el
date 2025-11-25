@@ -635,8 +635,6 @@ any other key exits this function."
 	"oc"  '(org-capture :wk "org capture")
 	;; org roam
 	"of"  '(org-roam-node-find :wk "org roam find node")
-	"op"  '(org-roam-node-insert :wk "org roam insert node link")
-
     )
   )
 
@@ -646,6 +644,9 @@ any other key exits this function."
       (load-file user-init-file)
       (load-file user-init-file)
   )
+
+;; org-roam
+(global-set-key (kbd "C-a") 'org-roam-node-insert)
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)

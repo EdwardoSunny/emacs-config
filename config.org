@@ -37,6 +37,7 @@
   - [[#company-math][Company Math]]
 - [[#key-bindings][Key Bindings]]
   - [[#generalel-keybindings][General.el Keybindings]]
+  - [[#misc-non-evil-keybindings][Misc Non-evil Keybindings]]
   - [[#zoom][Zoom]]
   - [[#minibuffer-escape][Minibuffer Escape]]
 - [[#appearance][Appearance]]
@@ -917,8 +918,6 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
 	"oc"  '(org-capture :wk "org capture")
 	;; org roam
 	"of"  '(org-roam-node-find :wk "org roam find node")
-	"op"  '(org-roam-node-insert :wk "org roam insert node link")
-
     )
   )
 
@@ -929,7 +928,13 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
       (load-file user-init-file)
   )
 
+#+end_src
 
+** Misc Non-evil Keybindings
+
+#+begin_src emacs-lisp
+  ;; org-roam
+  (global-set-key (kbd "C-a") 'org-roam-node-insert)
 #+end_src
 
 ** Zoom

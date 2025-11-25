@@ -18,3 +18,5 @@ tramp
 request/
 transient/
 
+*.db
+

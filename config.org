@@ -1016,17 +1016,54 @@ Sane defaults for emacs
 #+end_src
 
 Basic configs:
-- Set the directory, I like =~/Notes/=.
+- Set the directory, I like =~/org-roam/=.
 
 #+begin_src emacs-lisp
 (use-package org-roam
   :ensure t
   :custom
-  (org-roam-directory "~/Notes")
+  (org-roam-directory "~/org-roam")
   (org-roam-completion-everywhere t)
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                         "#+title: ${title}\n")
+      :unnarrowed t)
+     ("p" "paper" entry
+      "* Summary\n%?\n\n* Key Claims\n\n* Method\n\n* Results\n\n* Strengths\n\n* Weaknesses\n\n* Connections\n"
+      :if-new (file+head "papers/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :paper:\n#+date: %U\n#+ROAM_KEY: ${ref}\n#+ARXIV: \n\n")
+      :unnarrowed t)
+     ("i" "idea" entry
+      "* Description\n%?\n\n* Motivation\n\n* Related Notes\n\n* Methods\n\n* Next Steps\n"
+      :if-new (file+head "ideas/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :idea:\n#+date: %U\n")
+      :unnarrowed t)
+     ("c" "concept" entry
+      "* Definition\n%?\n\n* Explanation\n\n* Examples\n\n* Related Concepts\n"
+      :if-new (file+head "concepts/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :concept:\n#+date: %U\n")
+      :unnarrowed t)
+     ("m" "meeting" entry
+      "* Agenda\n\n* Notes\n%?\n\n* Action Items\n"
+      :if-new (file+head "meetings/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
+      :unnarrowed t)
+     ("P" "project" entry
+      "* Goals\n%?\n\n* Milestones\n\n* Tasks\n\n* Literature\n"
+      :if-new (file+head "projects/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
+      :unnarrowed t)
+     ("n" "person" entry
+      "* Affiliation\n%?\n\n* Research Interests\n\n* Areas of Expertise\n\n* Interesting Publications\n\n- [[roam:]]\n\n* Notes\n\n* Related Projects\n\n* Meetings\n"
+      :if-new (file+head "people/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :person:\n#+date: %U\n")
+      :unnarrowed t)))
   :config
   (org-roam-setup))
 #+end_src
+
 *** Org-roam-ui 
 Graph view for org-roam like obsidian
 
@@ -1102,102 +1139,101 @@ From DistroTube's config
 * Key Bindings
 ** General.el Keybindings
 #+begin_src emacs-lisp
-      (use-package general
-        :config
-        (general-evil-setup t)
+(use-package general
+  :config
+  (general-evil-setup t)
 
-(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-        ;; buffers
-        ","   '(ibuffer :which-key "ibuffer")
-        "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
-        "b d"   '(kill-current-buffer :which-key "kill current buffer")
-        "b n"   '(next-buffer :which-key "next buffer")
-        "b p"   '(previous-buffer :which-key "previous buffer")
-        "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
-        "b D"   '(kill-buffer :which-key "kill buffer")
-        ;; search 
-        "/" '(swiper :wk "swiper search")
-        ;; comment 
-        "c c" '(comment-line :wk "comment lines")
-        ;; help 
-        "h" '(:ignore t :wk "help")
-        "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
-        "hv" '(describe-variable :wk "describe variable")
-        "h r r" '(reload-init-file :wk "reload emacs config")
-        ;; themes 
-        "t"  '(:ignore t :wk "toggles")
-        "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
-        ;; file navigation 
-       "."     '(find-file :which-key "find file")
-       "ff"   '(find-file :which-key "find file")
-       "fr"   '(counsel-recentf :which-key "recent files")
-       "fs"   '(save-buffer :which-key "save file")
-       "fu"   '(sudo-edit-find-file :which-key "sudo find file")
-       "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
-       "fC"   '(copy-file :which-key "copy file")
-       "fD"   '(delete-file :which-key "delete file")
-       "fR"   '(rename-file :which-key "rename file")
-       "fS"   '(write-file :which-key "save file as...")
-       "fU"   '(sudo-edit :which-key "sudo edit file")
-        ;; windows 
-        "wv" '(evil-window-vsplit :wk "split-window-right")
-        "ws" '(evil-window-split  :wk "split-window-below")
-        "wd" '(evil-window-delete :wk "delete-window")
-        "wD" '(delete-other-windows :wk "delete-other-windows")
-        ;; resize windows
-        "w[" '(evil-window-decrease-width :wk "decrease-window-width")
-        "w]" '(evil-window-increase-width :wk "increase-window-width")
-        "w-" '(evil-window-decrease-height :wk "decrease-window-height")
-        "w=" '(evil-window-increase-height :wk "increase-window-height")
-        ;; navigation 
-        "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
-        "wj" '(evil-window-down :wk "windmove-down")
-        "wk" '(evil-window-up :wk "windmove-up")
-        "wl" '(evil-window-right :wk "windmove-right")
-        "ww" '(evil-window-next :wk "windmove-next")
-        ;; window move
-        "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
-        "wJ" '(buf-move-down :wk "move window down")
-        "wK" '(buf-move-up :wk "move window up")
-        "wL" '(buf-move-right :wk "windmove-right")
-        ;; terminal
-        "ot" '(eshell-toggle :wk "toggle eshell")
-        "oT" '(eshell-new :wk "open new eshell")
-        ;; perspective.el workspaces
-        "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
-        ;; projectile
-        "p" `(projectile-command-map :wk "Projectile command map")
-        ;; AUCTex bindings
-        ;; previewing 
-        "lpp" '(preview-buffer :wk "preview current latex buffer") 
-        "lpa" '(preview-at-point :wk "toggle latex preview at point") 
-        "lpd" '(preview-document :wk "preview current latex document") 
-        ;; compiling latex
-        "lca" '(TeX-command-run-all :wk "compile current document") 
-         ;; speedbar "file tree"
-        "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
-	;; ssh
-        "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
-        "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
-        "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
-        "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
-        "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
-	;; org
-	"oc"  '(org-capture :wk "org capture")
-	;; org roam
-	"of"  '(org-roam-node-find :wk "org roam find node")
-        "ol"  '(org-roam-buffer-toggle :wk "org roam buffer toggle")
-	;; org roam ui
-        "og"  '(org-roam-ui-mode :wk "org roam ui graph")
+  (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+    ;; buffers
+    ","   '(ibuffer :which-key "ibuffer")
+    "b c"   '(clone-indirect-buffer-other-window :which-key "clone indirect buffer other window")
+    "b d"   '(kill-current-buffer :which-key "kill current buffer")
+    "b n"   '(next-buffer :which-key "next buffer")
+    "b p"   '(previous-buffer :which-key "previous buffer")
+    "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
+    "b D"   '(kill-buffer :which-key "kill buffer")
+    ;; search 
+    "/" '(swiper :wk "swiper search")
+    ;; comment 
+    "c c" '(comment-line :wk "comment lines")
+    ;; help 
+    "h" '(:ignore t :wk "help")
+    "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
+    "hv" '(describe-variable :wk "describe variable")
+    "h r r" '(reload-init-file :wk "reload emacs config")
+    ;; themes 
+    "t"  '(:ignore t :wk "toggles")
+    "tt" '(counsel-load-theme :wk "choose theme") ;; change theme easily
+    ;; file navigation 
+    "."     '(find-file :which-key "find file")
+    "ff"   '(find-file :which-key "find file")
+    "fr"   '(counsel-recentf :which-key "recent files")
+    "fs"   '(save-buffer :which-key "save file")
+    "fu"   '(sudo-edit-find-file :which-key "sudo find file")
+    "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+    "fC"   '(copy-file :which-key "copy file")
+    "fD"   '(delete-file :which-key "delete file")
+    "fR"   '(rename-file :which-key "rename file")
+    "fS"   '(write-file :which-key "save file as...")
+    "fU"   '(sudo-edit :which-key "sudo edit file")
+    ;; windows 
+    "wv" '(evil-window-vsplit :wk "split-window-right")
+    "ws" '(evil-window-split  :wk "split-window-below")
+    "wd" '(evil-window-delete :wk "delete-window")
+    "wD" '(delete-other-windows :wk "delete-other-windows")
+    ;; resize windows
+    "w[" '(evil-window-decrease-width :wk "decrease-window-width")
+    "w]" '(evil-window-increase-width :wk "increase-window-width")
+    "w-" '(evil-window-decrease-height :wk "decrease-window-height")
+    "w=" '(evil-window-increase-height :wk "increase-window-height")
+    ;; navigation 
+    "wh" '(evil-window-left :wk "windmove-left") ;; vim like window movement
+    "wj" '(evil-window-down :wk "windmove-down")
+    "wk" '(evil-window-up :wk "windmove-up")
+    "wl" '(evil-window-right :wk "windmove-right")
+    "ww" '(evil-window-next :wk "windmove-next")
+    ;; window move
+    "wH" '(buf-move-left :wk "move window left") ;; vim like window movement
+    "wJ" '(buf-move-down :wk "move window down")
+    "wK" '(buf-move-up :wk "move window up")
+    "wL" '(buf-move-right :wk "windmove-right")
+    ;; terminal
+    "ot" '(eshell-toggle :wk "toggle eshell")
+    "oT" '(eshell-new :wk "open new eshell")
+    ;; perspective.el workspaces
+    "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
+    ;; projectile
+    "p" `(projectile-command-map :wk "Projectile command map")
+    ;; AUCTex bindings
+    ;; previewing 
+    "lpp" '(preview-buffer :wk "preview current latex buffer") 
+    "lpa" '(preview-at-point :wk "toggle latex preview at point") 
+    "lpd" '(preview-document :wk "preview current latex document") 
+    ;; compiling latex
+    "lca" '(TeX-command-run-all :wk "compile current document") 
+    ;; speedbar "file tree"
+    "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
+    ;; ssh
+    "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
+    "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
+    "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
+    "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
+    "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
+    ;; org
+    "oc"  '(org-capture :wk "org capture")
+    ;; org roam
+    "of"  '(org-roam-node-find :wk "org roam find node")
+    "ol"  '(org-roam-buffer-toggle :wk "org roam buffer toggle")
+    ;; org roam ui
+    "og"  '(org-roam-ui-mode :wk "org roam ui graph")
     )
   )
 
-   (defun reload-init-file()
-      (interactive)
-      (load-file user-init-file)
-      (load-file user-init-file)
+(defun reload-init-file()
+  (interactive)
+  (load-file user-init-file)
+  (load-file user-init-file)
   )
-
 #+end_src
 
 ** Misc Non-evil Keybindings

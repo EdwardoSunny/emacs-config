@@ -914,7 +914,6 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
         "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
         "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
 	;; org
-	"ol"  '(org-insert-link :wk "org insert link")
 	"oc"  '(org-capture :wk "org capture")
 	;; org roam
 	"of"  '(org-roam-node-find :wk "org roam find node")
@@ -931,10 +930,11 @@ Alternative autocompletion for LaTex using company-mode. It is also nice to disp
 #+end_src
 
 ** Misc Non-evil Keybindings
-
 #+begin_src emacs-lisp
-  ;; org-roam
-  (global-set-key (kbd "C-a") 'org-roam-node-insert)
+;; regular org
+;; C-c C-l inserts link
+;; org-roam
+(global-set-key (kbd "C-a") 'org-roam-node-insert)
 #+end_src
 
 ** Zoom

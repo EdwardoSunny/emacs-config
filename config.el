@@ -631,7 +631,7 @@ any other key exits this function."
         "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
         "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
 	;; org
-	"ol"  '(org-insert-link :wk "org insert link")
+	;; "ol"  '(org-insert-link :wk "org insert link")
 	"oc"  '(org-capture :wk "org capture")
 	;; org roam
 	"of"  '(org-roam-node-find :wk "org roam find node")

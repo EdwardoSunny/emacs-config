@@ -773,6 +773,37 @@ any other key exits this function."
           org-roam-ui-update-on-save t
           org-roam-ui-open-on-start t))
 
+(use-package org-download
+  :after org
+  :defer nil
+  :config
+  ;; Save into a fixed directory (we'll override per-call below)
+  (setq org-download-method 'directory
+        org-download-heading-lvl 0
+        org-download-timestamp "org_%Y%m%d-%H%M%S_"
+        org-image-actual-width 900
+
+        ;; Read PNG data from clipboard via xclip (Ubuntu)
+        org-download-screenshot-method
+        "xclip -selection clipboard -t image/png -o > %s")
+
+  (defun my/org-roam-insert-clipboard-image ()
+    "Save clipboard image into `org-roam-directory`/img and insert link."
+    (interactive)
+    (unless (boundp 'org-roam-directory)
+      (user-error "org-roam-directory is not set"))
+    (let* ((img-dir (expand-file-name "img" org-roam-directory)))
+      (unless (file-directory-p img-dir)
+        (make-directory img-dir t))
+      ;; Temporarily override image dir so org-download writes into Roam img/
+      (let ((org-download-image-dir img-dir))
+        (org-download-screenshot))))
+
+  ;; Evil: in ORG buffers, in *insert* state, C-v inserts clipboard image
+  (with-eval-after-load 'evil
+    (evil-define-key 'insert org-mode-map
+      (kbd "C-v") #'my/org-roam-insert-clipboard-image)))
+
 (use-package toc-org
     :commands toc-org-enable
     :init (add-hook `org-mode-hook `toc-org-enable)

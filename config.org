@@ -1181,25 +1181,27 @@ Display the actual color as a background for hex colors like #ffffff. prog-mode 
 
 ** Dashboard
 #+begin_src emacs-lisp
-  (use-package dashboard
-    :init
-    (setq initial-buffer-choice 'dashboard-open)
-    (setq dashboard-set-heading-icons t)
-    (setq dashboard-set-file-icons t)
-    (setq dashboard-center-content t) ;; set to 't' for centered content
-    (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
-    ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-    (setq dashboard-startup-banner "~/.emacs.d/img/nerv.png")  ;; use custom image as banner
-    (setq dashboard-items '((recents . 5)
-                            ;; (agenda . 5 )
-                            (bookmarks . 3)
-                            ;; (projects . 3)
-                            (registers . 3)))
-    :custom
-    (dashboard-modify-heading-icons '((recents . "file-text")
-                                      (bookmarks . "book")))
-    :config
-    (dashboard-setup-startup-hook))
+(use-package dashboard
+  :init
+  (setq initial-buffer-choice 'dashboard-open)
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-file-icons t)
+  (setq dashboard-center-content t) ;; set to 't' for centered content
+  (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
+  ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
+  ;; (setq dashboard-startup-banner "~/.emacs.d/img/nerv.png")  ;; use custom image as banner
+  (setq dashboard-startup-banner "~/.emacs.d/img/guts.png") 
+  (setq dashboard-image-banner-max-height 750)   ;; max custom banner image height 
+  (setq dashboard-items '((recents . 5)
+                          ;; (agenda . 5 )
+                          (bookmarks . 3)
+                          ;; (projects . 3)
+                          (registers . 3)))
+  :custom
+  (dashboard-modify-heading-icons '((recents . "file-text")
+                                    (bookmarks . "book")))
+  :config
+  (dashboard-setup-startup-hook))
 #+end_src
 
 ** Modeline

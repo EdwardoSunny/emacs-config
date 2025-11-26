@@ -7,6 +7,17 @@
 #+option: toc:2
 
 * Table of Contents                                                     :toc:
+- [[#keybinds-guide][Keybinds Guide]]
+  - [[#cheatsheet-summary-by-prefix][Cheatsheet Summary by Prefix]]
+  - [[#general-editing--navigation][General Editing & Navigation]]
+  - [[#buffers--windows][Buffers & Windows]]
+  - [[#files--projects][Files & Projects]]
+  - [[#search-help--theming][Search, Help & Theming]]
+  - [[#org-mode--org-roam][Org Mode & Org-roam]]
+  - [[#terminal-eshell--remote-machines][Terminal, Eshell & Remote Machines]]
+  - [[#latex--auctex][LaTeX / AUCTeX]]
+  - [[#completion-lsp-copilot--company][Completion, LSP, Copilot & Company]]
+  - [[#zooming--view][Zooming & View]]
 - [[#important-programs-to-load-first][Important Programs to Load First]]
   - [[#straight-package-manager][Straight Package Manager]]
   - [[#load-evil-mode][Load Evil Mode]]
@@ -58,6 +69,248 @@
   - [[#misc-non-evil-keybindings][Misc Non-evil Keybindings]]
   - [[#zoom][Zoom]]
   - [[#minibuffer-escape][Minibuffer Escape]]
+
+* Keybinds Guide
+Here's a guide to the keybinds in my configuration.
+
+- All bindings that start with =SPC= are Evil leader keys in *normal/visual* states.
+- "Global" means they work in most buffers, regardless of major mode.
+- Context like “Eshell” or “Copilot popup” means those keys only apply there.
+- Key notation examples:
+  - =SPC f f= → press =SPC=, then =f=, then =f=
+  - =C-x B= → press =Ctrl=+x, then B
+  - =C-<wheel-up>= → hold Ctrl and scroll up
+
+** Cheatsheet Summary by Prefix
+
+- Buffers → =SPC b=
+- Files → =SPC f=
+- Windows → =SPC w=
+- Projects → =SPC p=
+- Search → =SPC /=, =C-s=
+- Help → =SPC h=
+- Theme → =SPC t t=
+- Org → =SPC o …=
+- Roam → =SPC o f~, =SPC o l~, =SPC o g=
+- Eshell → =SPC o t~, =SPC o T=
+- LaTeX → =SPC l …=
+- SSH → =SPC r 1–5=
+- Workspaces → =SPC TAB=
+- Zoom → =C-=~, =C--=
+- Escape → =ESC~ (quit anything)
+
+---
+
+** General Editing & Navigation
+
+*** Global Editing / Navigation
+
+| Key             | Context         | Command                    | Description                                     |
+|-----------------+-----------------+----------------------------+-------------------------------------------------|
+| ~C-SPC~         | Global          | ~completion-at-point~      | Trigger generic completion at point             |
+| ~C-s~           | Global          | ~swiper~                   | Search forward in buffer                         |
+| ~C-x B~         | Global          | ~ivy-switch-buffer-other-window~ | Switch buffer in another window         |
+
+---
+
+** Buffers & Windows
+
+*** Buffer Management (Leader)
+
+| Key            | Context            | Command                               | Description                            |
+|----------------+--------------------+---------------------------------------+----------------------------------------|
+| ~SPC ,~        | Evil normal/visual | ~ibuffer~                             | Open Ibuffer                           |
+| ~SPC b c~      | Evil normal/visual | ~clone-indirect-buffer-other-window~  | Clone buffer to other window           |
+| ~SPC b d~      | Evil normal/visual | ~kill-current-buffer~                 | Kill current buffer                    |
+| ~SPC b n~      | Evil normal/visual | ~next-buffer~                         | Next buffer                            |
+| ~SPC b p~      | Evil normal/visual | ~previous-buffer~                     | Previous buffer                        |
+| ~SPC b B~      | Evil normal/visual | ~ibuffer-list-buffers~                | Show all buffers                       |
+| ~SPC b D~      | Evil normal/visual | ~kill-buffer~                         | Kill a chosen buffer                   |
+
+*** Window Management (Split / Close / Resize)
+
+| Key          | Context            | Command                           | Description                        |
+|--------------+--------------------+-----------------------------------+------------------------------------|
+| ~SPC w v~    | Evil normal/visual | ~evil-window-vsplit~              | Split right                        |
+| ~SPC w s~    | Evil normal/visual | ~evil-window-split~               | Split below                        |
+| ~SPC w d~    | Evil normal/visual | ~evil-window-delete~              | Close window                       |
+| ~SPC w D~    | Evil normal/visual | ~delete-other-windows~            | Keep only this window              |
+| ~SPC w [~    | Evil normal/visual | ~evil-window-decrease-width~      | Shrink width                       |
+| ~SPC w ]~    | Evil normal/visual | ~evil-window-increase-width~      | Grow width                         |
+| ~SPC w -~    | Evil normal/visual | ~evil-window-decrease-height~     | Shrink height                      |
+| ~SPC w =~    | Evil normal/visual | ~evil-window-increase-height~     | Grow height                        |
+
+*** Window Navigation & Buffer Movement
+
+| Key          | Context            | Command             | Description                        |
+|--------------+--------------------+---------------------+------------------------------------|
+| ~SPC w h~    | Evil normal/visual | ~evil-window-left~  | Move focus left                    |
+| ~SPC w j~    | Evil normal/visual | ~evil-window-down~  | Move focus down                    |
+| ~SPC w k~    | Evil normal/visual | ~evil-window-up~    | Move focus up                      |
+| ~SPC w l~    | Evil normal/visual | ~evil-window-right~ | Move focus right                   |
+| ~SPC w w~    | Evil normal/visual | ~evil-window-next~  | Cycle next window                  |
+| ~SPC w H~    | Evil normal/visual | ~buf-move-left~     | Move *buffer* left                 |
+| ~SPC w J~    | Evil normal/visual | ~buf-move-down~     | Move *buffer* down                 |
+| ~SPC w K~    | Evil normal/visual | ~buf-move-up~       | Move *buffer* up                   |
+| ~SPC w L~    | Evil normal/visual | ~buf-move-right~    | Move *buffer* right                |
+
+*** Workspaces (Perspective)
+
+| Key         | Context            | Command           | Description                |
+|-------------+--------------------+-------------------+----------------------------|
+| ~SPC TAB~   | Evil normal/visual | ~perspective-map~ | Workspace menu             |
+
+---
+
+** Files & Projects
+
+*** File Operations (Leader)
+
+| Key          | Context            | Command                     | Description                            |
+|--------------+--------------------+-----------------------------+----------------------------------------|
+| ~SPC .~      | Evil normal/visual | ~find-file~                 | Find file                              |
+| ~SPC f f~    | Evil normal/visual | ~find-file~                 | Find file                              |
+| ~SPC f r~    | Evil normal/visual | ~counsel-recentf~           | Recent files                           |
+| ~SPC f s~    | Evil normal/visual | ~save-buffer~               | Save                                    |
+| ~SPC f u~    | Evil normal/visual | ~sudo-edit-find-file~       | Open file with sudo                     |
+| ~SPC f y~    | Evil normal/visual | ~dt/show-and-copy-buffer-path~ | Show & copy file path               |
+| ~SPC f C~    | Evil normal/visual | ~copy-file~                 | Copy file                               |
+| ~SPC f D~    | Evil normal/visual | ~delete-file~               | Delete file                             |
+| ~SPC f R~    | Evil normal/visual | ~rename-file~               | Rename file                             |
+| ~SPC f S~    | Evil normal/visual | ~write-file~                | Save as…                                |
+| ~SPC f U~    | Evil normal/visual | ~sudo-edit~                 | Reopen file with sudo                   |
+
+*** Project Management (Projectile)
+
+| Key          | Context            | Command                   | Description                                         |
+|--------------+--------------------+---------------------------+-----------------------------------------------------|
+| ~SPC p~      | Evil normal/visual | ~projectile-command-map~  | Projectile menu                                     |
+| ~SPC p p~    | via menu           | ~projectile-switch-project~ | Switch project                                  |
+| ~SPC p f~    | via menu           | ~projectile-find-file~      | Find file in project                             |
+| ~SPC p s g~  | via menu           | ~projectile-ripgrep~        | Ripgrep project-wide search                      |
+
+---
+
+** Search, Help & Theming
+
+*** Search
+
+| Key        | Context            | Command  | Description                  |
+|------------+--------------------+----------+------------------------------|
+| ~SPC /~    | Evil normal/visual | ~swiper~ | Search buffer                |
+
+*** Help
+
+| Key            | Context            | Command               | Description          |
+|----------------+--------------------+-----------------------+----------------------|
+| ~SPC h f~      | Evil normal/visual | ~describe-function~   | Describe function    |
+| ~SPC h v~      | Evil normal/visual | ~describe-variable~   | Describe variable    |
+| ~SPC h r r~    | Evil normal/visual | ~reload-init-file~    | Reload config        |
+
+---
+
+** Org Mode & Org-roam
+
+*** Org Capture & Roam (Leader)
+
+| Key          | Context            | Command                   | Description                                  |
+|--------------+--------------------+---------------------------+----------------------------------------------|
+| ~SPC o c~    | Evil normal/visual | ~org-capture~             | Capture note                                  |
+| ~SPC o f~    | Evil normal/visual | ~org-roam-node-find~      | Find/create Org-roam node                    |
+| ~SPC o l~    | Evil normal/visual | ~org-roam-buffer-toggle~  | Toggle backlinks buffer                       |
+| ~SPC o g~    | Evil normal/visual | ~org-roam-ui-mode~        | Open Org-roam graph UI                        |
+
+*** Org-roam Insert
+
+| Key      | Context | Command                 | Description                                |
+|----------+---------+-------------------------+--------------------------------------------|
+| ~C-a~    | Global  | ~org-roam-node-insert~  | Insert Org-roam node link                  |
+
+*** Org Tempo Snippets
+
+| Typed + TAB | Expands to…                         |
+|-------------+--------------------------------------|
+| <s          | #+BEGIN_SRC / END_SRC                |
+| <q          | #+BEGIN_QUOTE / END_QUOTE            |
+| <e          | #+BEGIN_EXAMPLE / END_EXAMPLE        |
+| <l          | LaTeX export block                   |
+| <v          | Verse block                          |
+
+---
+
+** Terminal, Eshell & Remote Machines
+
+*** Eshell (Leader)
+
+| Key          | Context            | Command          | Description                     |
+|--------------+--------------------+------------------+---------------------------------|
+| ~SPC o t~    | Evil normal/visual | ~eshell-toggle~  | Toggle popup Eshell            |
+| ~SPC o T~    | Evil normal/visual | ~eshell-new~     | New named Eshell               |
+
+*** SSH Shortcuts
+
+| Key           | Context            | Command                  | Destination                                      |
+|---------------+--------------------+--------------------------+--------------------------------------------------|
+| ~SPC r 1~     | Evil normal/visual | visit-remote-project-1   | uril-1.cs.ucla.edu                               |
+| ~SPC r 2~     | Evil normal/visual | visit-remote-project-2   | scai3.cs.ucla.edu                                |
+| ~SPC r 3~     | Evil normal/visual | visit-remote-project-3   | scai4.cs.ucla.edu                                |
+| ~SPC r 4~     | Evil normal/visual | visit-remote-project-4   | 192.168.0.69                                      |
+| ~SPC r 5~     | Evil normal/visual | visit-remote-project-5   | 104.171.203.34                                    |
+
+*** “File Tree” / Speedbar
+
+| Key        | Context            | Command     | Description                 |
+|------------+--------------------+-------------+-----------------------------|
+| ~SPC s b~  | Evil normal/visual | ~speedbar~  | Toggle Speedbar tree        |
+
+---
+
+** LaTeX / AUCTeX
+
+*** Preview
+
+| Key            | Context            | Command             | Description                    |
+|----------------+--------------------+---------------------+--------------------------------|
+| ~SPC l p p~    | Evil normal/visual | ~preview-buffer~    | Preview whole buffer           |
+| ~SPC l p a~    | Evil normal/visual | ~preview-at-point~  | Preview at point               |
+| ~SPC l p d~    | Evil normal/visual | ~preview-document~  | Preview full document          |
+
+*** Compile
+
+| Key            | Context            | Command                 | Description                |
+|----------------+--------------------+-------------------------+----------------------------|
+| ~SPC l c a~    | Evil normal/visual | ~TeX-command-run-all~   | Full compile               |
+
+---
+
+** Completion, LSP, Copilot & Company
+
+*** Company / LSP
+
+| Key     | Context                     | Command                           | Description                           |
+|---------+-----------------------------+-----------------------------------+---------------------------------------|
+| ~TAB~   | LSP buffers                 | ~company-indent-or-complete-common~ | Indent or complete                |
+| ~TAB~   | Company popup               | ~company-complete-selection~      | Accept completion                     |
+
+*** Copilot
+
+| Key         | Context            | Command                            | Description                  |
+|-------------+--------------------+------------------------------------+------------------------------|
+| ~TAB~       | Copilot popup      | ~copilot-accept-completion~        | Accept full suggestion       |
+| ~C-TAB~     | Copilot popup      | ~copilot-accept-completion-by-word~ | Accept word-by-word         |
+
+---
+
+** Zooming & View
+
+| Key                | Context | Command               | Description                       |
+|--------------------+---------+-----------------------+-----------------------------------|
+| ~C-=~              | Global  | ~text-scale-increase~ | Zoom in                          |
+| ~C--~              | Global  | ~text-scale-decrease~ | Zoom out                         |
+| ~C-<wheel-up>~     | Global  | ~text-scale-increase~ | Zoom in with mouse               |
+| ~C-<wheel-down>~   | Global  | ~text-scale-decrease~ | Zoom out with mouse              |
+
+---
 
 * Important Programs to Load First
 ** Straight Package Manager
@@ -1010,11 +1263,6 @@ Sane defaults for emacs
 
 * Org Mode
 ** Org-roam
-#+begin_src emacs-lisp
-(use-package org-roam
-  :ensure t)
-#+end_src
-
 Basic configs:
 - Set the directory, I like =~/org-roam/=.
 
@@ -1030,38 +1278,64 @@ Basic configs:
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+title: ${title}\n")
       :unnarrowed t)
-     ("p" "paper" entry
+     ("p" "paper" plain 
       "* Summary\n%?\n\n* Key Claims\n\n* Method\n\n* Results\n\n* Strengths\n\n* Weaknesses\n\n* Connections\n"
       :if-new (file+head "papers/${slug}.org"
                          "#+title: ${title}\n#+filetags: :paper:\n#+date: %U\n#+ROAM_KEY: ${ref}\n#+ARXIV: \n\n")
       :unnarrowed t)
-     ("i" "idea" entry
+     ("i" "idea" plain 
       "* Description\n%?\n\n* Motivation\n\n* Related Notes\n\n* Methods\n\n* Next Steps\n"
       :if-new (file+head "ideas/${slug}.org"
                          "#+title: ${title}\n#+filetags: :idea:\n#+date: %U\n")
       :unnarrowed t)
-     ("c" "concept" entry
+     ("c" "concept" plain 
       "* Definition\n%?\n\n* Explanation\n\n* Examples\n\n* Related Concepts\n"
       :if-new (file+head "concepts/${slug}.org"
                          "#+title: ${title}\n#+filetags: :concept:\n#+date: %U\n")
       :unnarrowed t)
-     ("m" "meeting" entry
+     ("m" "meeting" plain 
       "* Agenda\n\n* Notes\n%?\n\n* Action Items\n"
       :if-new (file+head "meetings/${slug}.org"
                          "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
       :unnarrowed t)
-     ("P" "project" entry
+     ("P" "project" plain 
       "* Goals\n%?\n\n* Milestones\n\n* Tasks\n\n* Literature\n"
       :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
       :unnarrowed t)
-     ("n" "person" entry
+     ("n" "person" plain 
       "* Affiliation\n%?\n\n* Research Interests\n\n* Areas of Expertise\n\n* Interesting Publications\n\n- [[roam:]]\n\n* Notes\n\n* Related Projects\n\n* Meetings\n"
       :if-new (file+head "people/${slug}.org"
                          "#+title: ${title}\n#+filetags: :person:\n#+date: %U\n")
       :unnarrowed t)))
   :config
-  (org-roam-setup))
+  (org-roam-setup)
+
+  ;; 1. Inbox location
+  (setq org-default-notes-file
+        (expand-file-name "refile.org" org-roam-directory))
+
+  ;; 2. Fast capture → inbox
+  (setq org-capture-templates
+        '(("r" "Refile (inbox)" entry
+           (file org-default-notes-file)
+           "* %?\n%U\n")))
+
+  ;; 3. Refile targets: inbox + all Org-roam notes
+  (defun my/org-roam-refile-targets ()
+    "Return a list of all Org files under `org-roam-directory` for `org-refile-targets`."
+    (mapcar (lambda (f) (list f :maxlevel 3))
+            (directory-files-recursively org-roam-directory "\\.org$")))
+
+  (setq org-refile-targets
+        (append
+         `((,org-default-notes-file :maxlevel . 3))
+         (my/org-roam-refile-targets)))
+
+  ;; 4. Quality-of-life refinements
+  (setq org-outline-path-complete-in-steps nil
+        org-refile-use-outline-path 'file
+        org-refile-allow-creating-parent-nodes 'confirm))
 #+end_src
 
 *** Org-roam-ui 
@@ -1243,6 +1517,7 @@ From DistroTube's config
 (global-set-key (kbd "C-SPC") 'completion-at-point)
 ;; org-roam
 (global-set-key (kbd "C-a") 'org-roam-node-insert)
+;; refile C-c C-w
 #+end_src
 
 ** Zoom

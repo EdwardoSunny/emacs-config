@@ -690,9 +690,6 @@ any other key exits this function."
 (setq org-edit-src-content-indentation 0) ;; Set src block automatic indent to 0 instead of 2.
 
 (use-package org-roam
-  :ensure t)
-
-(use-package org-roam
   :ensure t
   :custom
   (org-roam-directory "~/org-roam")
@@ -703,38 +700,64 @@ any other key exits this function."
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
                          "#+title: ${title}\n")
       :unnarrowed t)
-     ("p" "paper" entry
+     ("p" "paper" plain 
       "* Summary\n%?\n\n* Key Claims\n\n* Method\n\n* Results\n\n* Strengths\n\n* Weaknesses\n\n* Connections\n"
       :if-new (file+head "papers/${slug}.org"
                          "#+title: ${title}\n#+filetags: :paper:\n#+date: %U\n#+ROAM_KEY: ${ref}\n#+ARXIV: \n\n")
       :unnarrowed t)
-     ("i" "idea" entry
+     ("i" "idea" plain 
       "* Description\n%?\n\n* Motivation\n\n* Related Notes\n\n* Methods\n\n* Next Steps\n"
       :if-new (file+head "ideas/${slug}.org"
                          "#+title: ${title}\n#+filetags: :idea:\n#+date: %U\n")
       :unnarrowed t)
-     ("c" "concept" entry
+     ("c" "concept" plain 
       "* Definition\n%?\n\n* Explanation\n\n* Examples\n\n* Related Concepts\n"
       :if-new (file+head "concepts/${slug}.org"
                          "#+title: ${title}\n#+filetags: :concept:\n#+date: %U\n")
       :unnarrowed t)
-     ("m" "meeting" entry
+     ("m" "meeting" plain 
       "* Agenda\n\n* Notes\n%?\n\n* Action Items\n"
       :if-new (file+head "meetings/${slug}.org"
                          "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
       :unnarrowed t)
-     ("P" "project" entry
+     ("P" "project" plain 
       "* Goals\n%?\n\n* Milestones\n\n* Tasks\n\n* Literature\n"
       :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
       :unnarrowed t)
-     ("n" "person" entry
+     ("n" "person" plain 
       "* Affiliation\n%?\n\n* Research Interests\n\n* Areas of Expertise\n\n* Interesting Publications\n\n- [[roam:]]\n\n* Notes\n\n* Related Projects\n\n* Meetings\n"
       :if-new (file+head "people/${slug}.org"
                          "#+title: ${title}\n#+filetags: :person:\n#+date: %U\n")
       :unnarrowed t)))
   :config
-  (org-roam-setup))
+  (org-roam-setup)
+
+  ;; 1. Inbox location
+  (setq org-default-notes-file
+        (expand-file-name "refile.org" org-roam-directory))
+
+  ;; 2. Fast capture → inbox
+  (setq org-capture-templates
+        '(("r" "Refile (inbox)" entry
+           (file org-default-notes-file)
+           "* %?\n%U\n")))
+
+  ;; 3. Refile targets: inbox + all Org-roam notes
+  (defun my/org-roam-refile-targets ()
+    "Return a list of all Org files under `org-roam-directory` for `org-refile-targets`."
+    (mapcar (lambda (f) (list f :maxlevel 3))
+            (directory-files-recursively org-roam-directory "\\.org$")))
+
+  (setq org-refile-targets
+        (append
+         `((,org-default-notes-file :maxlevel . 3))
+         (my/org-roam-refile-targets)))
+
+  ;; 4. Quality-of-life refinements
+  (setq org-outline-path-complete-in-steps nil
+        org-refile-use-outline-path 'file
+        org-refile-allow-creating-parent-nodes 'confirm))
 
 (use-package org-roam-ui
   :straight
@@ -875,6 +898,7 @@ any other key exits this function."
 (global-set-key (kbd "C-SPC") 'completion-at-point)
 ;; org-roam
 (global-set-key (kbd "C-a") 'org-roam-node-insert)
+;; refile C-c C-w
 
 (global-set-key (kbd "C-=") 'text-scale-increase)
 (global-set-key (kbd "C--") 'text-scale-decrease)

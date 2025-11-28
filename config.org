@@ -210,6 +210,15 @@ Here's a guide to the keybinds in my configuration.
 ---
 
 ** Org Mode & Org-roam
+*** Org mode shortcuts
+
+| Key        | Context            | Command    | Description                                      |
+|------------+--------------------+------------+--------------------------------------------------|
+| ~C-RETURN~ | Evil normal/visual | ~N/A~      | New line with same heading level/list level      |
+| ~TAB~      | Evil insert        | ~N/A~      | Make this heading/list indented in a lower level |
+| ~TAB~      | Evil normal        | ~N/A~      | Fold/unfold Headings/lists                       |
+| ~C-c C-t~  | Evil normal/visual | ~org-todo~ | Toggle through TODO states                       |
+| ~C-c C-c~  | Evil normal/visual | ~N/A~      | Check a checkbox                                 |
 
 *** Org Capture & Roam (Leader)
 

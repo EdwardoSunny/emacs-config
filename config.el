@@ -631,8 +631,8 @@ any other key exits this function."
   (setq dashboard-center-content t) ;; set to 't' for centered content
   (setq dashboard-banner-logo-title "神は神の天国にいって、世界はすべて整っているよ")
   ;;(setq dashboard-startup-banner 'logo) ;; use standard emacs logo as banner
-  (setq dashboard-startup-banner "~/.emacs.d/img/nerv.png")  ;; use custom image as banner
-  ;; (setq dashboard-startup-banner "~/.emacs.d/img/guts.png") 
+  ;; (setq dashboard-startup-banner "~/.emacs.d/img/nerv.png")  ;; use custom image as banner
+  (setq dashboard-startup-banner "~/.emacs.d/img/guts.png") 
   (setq dashboard-image-banner-max-height 750)   ;; max custom banner image height 
   (setq dashboard-items '((recents . 5)
                           ;; (agenda . 5 )

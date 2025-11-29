@@ -723,7 +723,7 @@ any other key exits this function."
                          "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
       :unnarrowed t)
      ("P" "project" plain 
-      "* Goals\n%?\n\n* Milestones\n\n* Tasks\n\n* Literature\n"
+      "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* DO-List\n\n* Related Literature\n\n* Resources\n"
       :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
       :unnarrowed t)

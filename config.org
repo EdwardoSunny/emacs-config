@@ -156,9 +156,10 @@ Here's a guide to the keybinds in my configuration.
 
 *** Workspaces (Perspective)
 
-| Key         | Context            | Command           | Description                |
-|-------------+--------------------+-------------------+----------------------------|
-| ~SPC TAB~   | Evil normal/visual | ~perspective-map~ | Workspace menu             |
+| Key         | Context            | Command              | Description                 |
+|-------------+--------------------+----------------------+-----------------------------|
+| ~SPC TAB~   | Evil normal/visual | ~perspective-map~    | Workspace menu              |
+| ~SPC TAB s~ | Evil normal/visual | ~perspective-switch~ | Switch/open new perspective |
 
 ---
 

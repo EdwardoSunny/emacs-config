@@ -1,6 +1,22 @@
 (straight-use-package 'use-package)
 (setq straight-use-package-by-default t)
 
+(use-package exec-path-from-shell
+  :straight t
+  :init
+  (setq exec-path-from-shell-arguments '("-i" "-l"))
+  ;; don't nag about PATH living in .zshrc; that's deliberate here
+  (setq exec-path-from-shell-check-startup-files nil)
+  :config
+  ;; a terminal Emacs already inherited a good PATH, only GUI needs this
+  (when (memq window-system '(mac ns x))
+    ;; exec-path-from-shell hard-errors if `default-directory' is remote, since
+    ;; it would otherwise run the "login shell" on the wrong machine. Reloading
+    ;; the config from a Tramp buffer (SPC h r r) used to trip that. `~' is an
+    ;; absolute anchor, so this is local no matter where we were called from.
+    (let ((default-directory (expand-file-name "~/")))
+      (exec-path-from-shell-initialize))))
+
 (use-package evil
   :init
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
@@ -13,28 +29,16 @@
   :config
   ;; Allow undo and redo like vim
   (use-package undo-fu)
-  (setq evil-undo-system `undo-fu) 
-
-  ;; Custom function to set keybindings for vterm and other buffers
-  (defun my-setup-evil-keybindings ()
-    (if (derived-mode-p 'vterm-mode)
-        (progn
-          ;; In vterm, use vterm-yank for p and P
-          (define-key evil-normal-state-map "p" 'vterm-yank)
-          (define-key evil-normal-state-map "P" 'vterm-yank))
-      (progn
-        ;; In other buffers, use the default paste behavior
-        (define-key evil-normal-state-map "p" 'evil-paste-after)
-        (define-key evil-normal-state-map "P" 'evil-paste-before))))
-
-  ;; Add hook to run our custom setup function when switching buffers
-  (add-hook 'post-command-hook 'my-setup-evil-keybindings) 
-)
+  (setq evil-undo-system `undo-fu))
 
 (use-package evil-collection
   :after evil
   :config
-  (setq evil-collection-mode-list '(dashboard dired ibuffer))
+  ;; vterm/eat: terminal buffers start in insert state so keys reach the
+  ;; program instead of evil, and p/P paste with the terminal's own yank.
+  ;; Without these the Claude Code buffer opens in normal state and swallows
+  ;; everything you type.
+  (setq evil-collection-mode-list '(dashboard dired ibuffer magit vterm eat))
   (evil-collection-init))
 
 (use-package evil-tutor)
@@ -46,10 +50,45 @@
     (define-key evil-motion-state-map (kbd "RET") nil)
 )
 
+;; One RET to run an Ex command.
+;; `ivy-mode' points `completion-in-region-function' at
+;; `ivy-completion-in-region', which opens a *recursive* minibuffer on top of
+;; the ":" prompt (allowed because we set `enable-recursive-minibuffers'). The
+;; first RET only dismisses that inner ivy prompt, so ":w" needs a second RET
+;; to actually run. Emacs' default UI completes in place with a *Completions*
+;; buffer instead, so one RET is enough. Scoped to the Ex minibuffer, so ivy
+;; still handles completion-at-point everywhere else.
+(defun my/evil-ex-use-default-completion ()
+  "Use the default completion UI in the evil Ex command line."
+  (setq-local completion-in-region-function #'completion--in-region))
+
+(advice-add 'evil-ex-setup :after #'my/evil-ex-use-default-completion)
+
 ;; allow redo, emacs 28+ only
 (evil-set-undo-system 'undo-redo)
 
 (setq org-return-follows-link t)
+
+(use-package evil-surround
+  :after evil
+  :config
+  (global-evil-surround-mode 1))
+
+(use-package evil-nerd-commenter
+  :after evil
+  :config
+  ;; gc as a comment operator in normal/visual, like vim-commentary
+  (evil-define-key '(normal visual) 'global (kbd "gc") #'evilnc-comment-operator))
+
+(use-package vundo
+  :commands vundo
+  :config
+  (setq vundo-glyph-alist vundo-unicode-symbols))
+
+(use-package undo-fu-session
+  :config
+  ;; compress and store undo history under ~/.emacs.d/undo-fu-session/
+  (undo-fu-session-global-mode))
 
 (defun efs/configure-eshell ()
   ;; Save command history when commands are entered
@@ -108,6 +147,36 @@
 (rename-buffer name)
 )
 
+(defvar my/gnu-libtool
+  (if (eq system-type 'darwin) "glibtool" "libtool")
+  "Name of the GNU libtool binary.
+On macOS `libtool' is Apple's static-library archiver, a different
+program; Homebrew installs GNU libtool as `glibtool'.")
+
+(defvar my/vterm-buildable-p
+  (and (fboundp 'module-load)
+       (executable-find "cmake")
+       (executable-find my/gnu-libtool)
+       t)
+  "Non-nil when this machine can compile vterm's C module.")
+
+(when my/vterm-buildable-p
+  (use-package vterm
+    :straight t
+    :commands (vterm vterm-other-window)
+    :custom
+    (vterm-max-scrollback 10000)
+    (vterm-kill-buffer-on-exit t)
+    ;; let vterm own C-c, TAB and friends so TUIs get them
+    (vterm-timer-delay 0.01)
+    ;; straight.el only clones and byte-compiles the elisp - it does not run
+    ;; cmake. vterm.el builds its own C module the first time it is loaded,
+    ;; normally stopping to ask first. Skip the prompt and just build.
+    (vterm-always-compile-module t)
+    :config
+    ;; no line numbers in a terminal, they steal columns from the TUI
+    (add-hook 'vterm-mode-hook (lambda () (display-line-numbers-mode -1)))))
+
 (use-package which-key
   :init
     (which-key-mode 1)
@@ -139,9 +208,9 @@
    ("C-x B" . ivy-switch-buffer-other-window))
   :diminish
   :custom
-  (setq ivy-use-virtual-buffers t)
-  (setq ivy-count-format "(%d/%d) ")
-  (setq enable-recursive-minibuffers t)
+  (ivy-use-virtual-buffers t)
+  (ivy-count-format "(%d/%d) ")
+  (enable-recursive-minibuffers t)
   :config
   (ivy-mode))
 
@@ -152,9 +221,9 @@
   :after ivy
   :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
   :custom
-  (ivy-virtual-abbreviate 'full
-   ivy-rich-switch-buffer-align-virtual-buffer t
-   ivy-rich-path-style 'abbrev)
+  (ivy-virtual-abbreviate 'full)
+  (ivy-rich-switch-buffer-align-virtual-buffer t)
+  (ivy-rich-path-style 'abbrev)
   :config
   (ivy-set-display-transformer 'ivy-switch-buffer
                                'ivy-rich-switch-buffer-transformer))
@@ -344,6 +413,27 @@ any other key exits this function."
 (setq dired-listing-switches "-alh")
 (add-hook 'dired-mode-hook 'auto-revert-mode)
 
+;; Remote dired: turn font-lock off.
+;;
+;; Dired's font-lock decides each line's face by asking the filesystem about
+;; the file - `file-truename', `file-exists-p', `file-directory-p', and more
+;; again for symlinks. Locally that's free. Over Tramp each one is a round
+;; trip, so colouring a listing costs more than fetching it.
+;;
+;; Measured on antpod (~170ms round trip), first visit to a directory:
+;;   font-lock on   2.18s
+;;   font-lock off  0.21s
+;; Once Tramp's attribute cache is warm both drop to ~0.18s, so this is
+;; specifically about the first visit and about anything that outlives
+;; `remote-file-name-inhibit-cache'.
+;;
+;; This is the Tramp maintainer's own recommendation - see Emacs bug#59151.
+;; Cost: no colours in remote dired. `M-x font-lock-mode' re-enables per buffer.
+(add-hook 'dired-mode-hook
+          (lambda ()
+            (when (file-remote-p default-directory)
+              (font-lock-mode -1))))
+
 (use-package diminish)
 
 (use-package perspective
@@ -372,54 +462,112 @@ any other key exits this function."
 
 (add-to-list 'exec-path "~/.local/bin")
 
-(straight-use-package 'jsonrpc)
-
-;; Install f (file manipulation library)
-(straight-use-package 'f)
-
-;; Install s (string manipulation library)
-(straight-use-package 's)
-
-;; Install dash (list manipulation library)
-(straight-use-package 'dash)
-
-;; Install editorconfig
-(straight-use-package 'editorconfig)
-(editorconfig-mode 1)
-
-(add-to-list 'load-path "~/.emacs.d/github-copilot")
-(require 'copilot)
-    ;; Enable in programming modes
-    (add-hook 'prog-mode-hook 'copilot-mode)
-
-    ;; Define key bindings
-    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
-    (define-key copilot-completion-map (kbd "C-TAB") 'copilot-accept-completion-by-word)
-    (define-key copilot-completion-map (kbd "C-<tab>") 'copilot-accept-completion-by-word)
-
-;; (setq copilot-idle-delay 0.2)
+(use-package editorconfig
+  :diminish
+  :config
+  (editorconfig-mode 1))
 
 (use-package magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
-(use-package evil-magit
-  :after magit)
+(use-package diff-hl
+  :config
+  (global-diff-hl-mode)
+  ;; show changes live while typing, not only after save
+  (diff-hl-flydiff-mode)
+  ;; no fringes in the terminal - fall back to the margin there
+  (unless (display-graphic-p)
+    (diff-hl-margin-mode))
+  ;; keep the gutter in sync with magit stages/unstages
+  (add-hook 'magit-pre-refresh-hook #'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+
+(use-package eat
+  :straight (:type git
+                   :host codeberg
+                   :repo "akib/emacs-eat"
+                   :files ("*.el" ("term" "term/*.el") "*.texi"
+                           "*.ti" ("terminfo/e" "terminfo/e/*")
+                           ("terminfo/65" "terminfo/65/*")
+                           ("integration" "integration/*")
+                           (:exclude ".dir-locals.el" "*-tests.el"))))
+
+(use-package inheritenv
+  :straight (:type git :host github :repo "purcell/inheritenv"))
+
+;; Claude goes in a vertical split on the right, not stacked below.
+;; The package default is `claude-code-display-buffer-below', i.e.
+;; `display-buffer-below-selected'. A side window suits a persistent chat pane
+;; better than a plain split: other buffers won't get displayed into it, so
+;; opening a file while point is in the Claude window can't hijack the pane,
+;; and `SPC w D' (`delete-other-windows') leaves Claude visible.
+(defun my/claude-code-display-buffer-right (buffer)
+  "Display the Claude BUFFER in a side window on the right."
+  (display-buffer buffer
+                  '((display-buffer-in-side-window)
+                    (side . right)
+                    (slot . 0)
+                    (window-width . 0.4))))
+
+(use-package claude-code
+  :straight (:type git :host github :repo "stevemolitor/claude-code.el"
+                   :branch "main" :depth 1
+                   :files ("*.el" (:exclude "images/*")))
+  ;; C-c c is the prefix for the whole command map, works in insert state too
+  :bind-keymap ("C-c c" . claude-code-command-map)
+  ;; after C-c c M, bare M keeps cycling default -> auto-accept -> plan
+  :bind (:repeat-map claude-code-mode-repeat-map
+         ("M" . claude-code-cycle-mode))
+  :custom
+  ;; vterm renders the TUI faster, but only exists if its module built; fall
+  ;; back to eat otherwise. locate-library, not featurep: vterm is deferred.
+  (claude-code-terminal-backend (if (locate-library "vterm") 'vterm 'eat))
+  (claude-code-display-window-fn #'my/claude-code-display-buffer-right)
+  :config
+  ;; line numbers in a terminal buffer only steal horizontal space from the TUI
+  (add-hook 'claude-code-start-hook
+            (lambda () (display-line-numbers-mode -1)))
+  (claude-code-mode))
 
 (use-package lsp-mode 
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
   (setq lsp-keymap-prefix "C-c l")
-  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-         (python-mode . lsp)
-         ;; if you want which-key integration
-         (lsp-mode . lsp-enable-which-key-integration))
+  ;; python-mode is hooked to `lsp-deferred' in the Python Mode block, not
+  ;; here - having both meant LSP was started twice per python buffer.
+  :hook ((lsp-mode . lsp-enable-which-key-integration))
   :commands lsp
 )
 
 ;; Suppress native compilation warnings
 (setq native-comp-async-report-warnings-errors 'silent)
+
+(setq read-process-output-max (* 1024 1024)) ;; 1MB per read from the server process
+(setq gc-cons-threshold (* 100 1024 1024))   ;; fewer, larger GCs while lsp is chatting
+(setq lsp-idle-delay 0.5)                    ;; batch work until typing pauses
+(setq lsp-log-io nil)                        ;; logging every message is a big perf hit
+
+;; Guard the first-time install: straight aborts the whole config load when a
+;; clone fails, and this machine's network has dropped GitHub DNS before. Once
+;; the repo exists locally the condition-case never fires again.
+(condition-case err
+    (use-package lsp-ui
+      :hook (lsp-mode . lsp-ui-mode)
+      :custom
+      (lsp-ui-doc-enable t)
+      (lsp-ui-doc-position 'at-point)
+      (lsp-ui-doc-show-with-mouse t)    ; popup on mouse hover, like VS Code
+      (lsp-ui-doc-show-with-cursor nil) ; but don't chase the cursor around
+      (lsp-ui-sideline-show-diagnostics t)
+      (lsp-ui-sideline-show-code-actions t)
+      (lsp-ui-sideline-show-hover nil)) ; hover text inline is noise, doc popup covers it
+  (error (message "lsp-ui unavailable this session (offline?): %s"
+                  (error-message-string err))))
+
+;; scope-aware highlighting from the server (lsp-mode feature, not lsp-ui):
+;; clangd supports it, pylsp doesn't - python just keeps regular font-lock
+(setq lsp-semantic-tokens-enable t)
 
 (add-hook 'c-mode-hook 'lsp)
 (add-hook 'c++-mode-hook 'lsp)
@@ -431,16 +579,25 @@ any other key exits this function."
 
 (setq lsp-pylsp-server-command "pylsp")
 (setq lsp-ruff-lsp-server-command "ruff-lsp")
-(add-hook 'python-mode-hook #'lsp-deferred)
 
-(elpy-enable)
+;; LSP used to be attached to python-mode from three places at once: here, the
+;; :hook in the lsp-mode block, and the :hook in the python-mode block. The
+;; python-mode one is the single source now. `elpy-enable' was likewise called
+;; twice - once here and once in elpy's own :init.
 
    ;; A python shell for every buffer
 (add-hook 'elpy-mode-hook (lambda () (elpy-shell-toggle-dedicated-shell 1)))
 
    ;;(add-hook 'python-mode-hook #'python-cello-mode 1)
-   (setq python-shell-interpreter "ipython3"
-            python-shell-interpreter-args "--simple-prompt -i --pylab=qt5")
+   ;; ipython when it exists, plain python3 otherwise so `run-python' never
+   ;; dies on a machine without it. --pylab=qt5 was dropped: it needs
+   ;; matplotlib + PyQt installed in ipython's own environment, and without
+   ;; them every shell start printed a ModuleNotFoundError traceback.
+   (if (executable-find "ipython3")
+       (setq python-shell-interpreter "ipython3"
+             python-shell-interpreter-args "--simple-prompt -i")
+     (setq python-shell-interpreter "python3"
+           python-shell-interpreter-args "-i"))
 
    ;; Real time syntax check in python
    (when (require 'flycheck nil t)
@@ -454,23 +611,34 @@ any other key exits this function."
 
 ;; (setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
 
-(use-package company
+  (use-package company
     :after lsp-mode
     :hook (prog-mode . company-mode)
     :bind (:map company-active-map
-           ("<tab>" . company-complete-selection))
-          (:map lsp-mode-map
+           ("<tab>" . company-complete-selection)
+           :map lsp-mode-map
            ("<tab>" . company-indent-or-complete-common))
     :custom
     (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
-
-  (use-package company-jedi)
-
-(defun my/python-mode-hook ()
-  (add-to-list 'company-backends 'company-jedi))
-
-(add-hook 'python-mode-hook 'my/python-mode-hook)
+    (company-idle-delay 0.0)
+    ;; Keep company out of evil's ":" command line.
+    ;;
+    ;; `global-company-mode' adds `company--minibuffer-on' to
+    ;; `minibuffer-setup-hook' at depth 100, and with `company-global-minibuffer'
+    ;; at its default of t that turns company on in any minibuffer that has a
+    ;; buffer-local `completion-at-point-functions'. `evil-ex-setup' adds exactly
+    ;; such a local capf, so every ":" prompt got company - and with idle-delay
+    ;; 0.0 and prefix-length 1 above, typing ":w" instantly popped a list of ex
+    ;; commands plus every Emacs command. Worse, `company-active-map' binds RET
+    ;; to `company-complete-selection', so the first RET only accepted the
+    ;; candidate and ":w" needed a second RET to actually run.
+    ;;
+    ;; The variable also accepts a predicate, called with the minibuffer
+    ;; current. Evil sets `evil-ex-original-buffer' buffer-locally just before
+    ;; `evil-ex-setup', so it is a reliable marker for the Ex prompt. This keeps
+    ;; company in other minibuffers, like `eval-expression'.
+    (company-global-minibuffer
+     (lambda () (not (local-variable-p 'evil-ex-original-buffer)))))
 
 ;; company box enables a box with icons to show up during competion much like vscode completions.
 (use-package company-box
@@ -487,6 +655,33 @@ any other key exits this function."
   :diminish
   :init (global-flycheck-mode))
 
+
+(use-package yasnippet
+  :diminish yas-minor-mode
+  :config
+  (yas-global-mode 1))
+
+(use-package yasnippet-snippets)
+
+(use-package apheleia
+  :commands (apheleia-format-buffer apheleia-mode))
+
+(use-package dumb-jump
+  :config
+  (setq dumb-jump-prefer-searcher 'rg)
+  ;; register as the xref fallback: lsp's backend still wins when it's active
+  (add-hook 'xref-backend-functions #'dumb-jump-xref-activate))
+
+;; multiple candidates land in the minibuffer (ivy) instead of an *xref* window
+(setq xref-show-definitions-function #'xref-show-definitions-completing-read)
+
+(use-package avy
+  :commands (avy-goto-char-timer avy-goto-line))
+
+(use-package ws-butler
+  :diminish
+  :hook (prog-mode . ws-butler-mode))
+
 (use-package projectile
   :straight t
   :diminish projectile-mode
@@ -501,18 +696,272 @@ any other key exits this function."
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
 
-(setq projectile-mode-line "Projectile") ;; disable modeline projectile, otherwise remote connections will have massive latency
+;; Keep projectile out of the mode line. `projectile-mode-line' (what used to
+;; be here) no longer exists in projectile - nothing reads it, so it was a
+;; no-op and the remote latency it was meant to fix was still there. The live
+;; knob is `projectile-dynamic-mode-line', which recomputes the project name
+;; on every window-configuration change; over Tramp that means constant
+;; round trips. It needs `setopt' rather than `setq' because its :set function
+;; is what removes the hook once `projectile-mode' is already on.
+(setopt projectile-dynamic-mode-line nil)
+
+(use-package wgrep
+  :custom
+  ;; save the touched buffers when applying, no "modified buffer" pile afterwards
+  (wgrep-auto-save-buffer t))
 
 (use-package ein)
 
 (setq tramp-default-method "ssh")
 
+;; --- fewer round trips -------------------------------------------------
+(setq tramp-verbose 1                               ; default 3; logging isn't free
+      remote-file-name-inhibit-locks t              ; no .#lock files over ssh
+      remote-file-name-inhibit-auto-save-visited t  ; don't auto-save remote buffers
+      tramp-completion-use-auth-sources nil)        ; skip auth-source scans while completing
+
+;; Raise `tramp-verbose' to 6 and check *tramp/...* buffers when debugging.
+
+(with-eval-after-load 'tramp-sh
+  ;; The big one. Above this size Tramp stops streaming a file inline over the
+  ;; connection it already has and spawns a fresh scp process instead. The
+  ;; default is 10 KiB, so nearly every open and save pays for a new
+  ;; connection. 1 MiB keeps ordinary source files inline.
+  (setq tramp-copy-size-limit (* 1024 1024)
+        tramp-use-scp-direct-remote-copying t))
+
+;; --- connections that survive -------------------------------------------
+;; Tramp's computed ControlMaster options end in ControlPersist=no: the ssh
+;; master dies the moment Tramp lets go of it, so revisiting a host after
+;; `SPC r d', an idle disconnect, or an Emacs restart pays the full ssh
+;; handshake again. ControlPersist=yes daemonizes the master instead, so the
+;; next connection to the same host is instant.
+;;
+;; The ControlPath is *relative* on purpose - this matches what Tramp itself
+;; computes on macOS (see Bug#19702 in tramp-sh.el): unix sockets cap the
+;; path at ~104 chars, and an absolute /var/folders/... path plus the hash
+;; blows past it and ssh refuses to make the socket. ssh's cwd here is the
+;; temp dir, so the sockets still land there. %%C is the hashed
+;; host/user/port, doubled because the string is used as a format string.
+;; Cost: idle ssh master processes linger after Emacs exits. They're
+;; harmless, but `SPC r D' (tramp-cleanup-all-connections) kills them.
+(with-eval-after-load 'tramp
+  (setq tramp-ssh-controlmaster-options
+        "-o ControlMaster=auto -o ControlPath=tramp.%%C -o ControlPersist=yes"))
+
+;; --- let async processes reuse the connection --------------------------
+;; Tramp 2.7+. Without this, every async process - magit, grep, compile -
+;; opens its own ssh connection. Protocol matches `tramp-default-method'.
+(connection-local-set-profile-variables
+ 'remote-direct-async-process
+ '((tramp-direct-async-process . t)))
+
+(connection-local-set-profiles
+ '(:application tramp :protocol "ssh")
+ 'remote-direct-async-process)
+
+;; `compile' deliberately switches ssh connection sharing off. Undo that.
+(with-eval-after-load 'compile
+  (remove-hook 'compilation-mode-hook
+               #'tramp-compile-disable-ssh-controlmaster-options))
+
+;; Magit hangs when staging hunks on a direct-async connection unless it uses
+;; a pty instead of a pipe - see the `magit-tramp-pipe-stty-settings'
+;; docstring. Caveat: pty mode breaks on repos with DOS line endings.
+(with-eval-after-load 'magit
+  (setq magit-tramp-pipe-stty-settings 'pty))
+
+;; --- stop other packages hammering the connection ----------------------
+;; vc shells out to git every time you open a remote file, which is the most
+;; noticeable single source of latency. Magit doesn't go through vc.el, so
+;; this costs nothing but the VC modeline and `vc-' commands on remote files.
+(with-eval-after-load 'tramp
+  (setq vc-ignore-dir-regexp
+        (format "\\(%s\\)\\|\\(%s\\)" vc-ignore-dir-regexp tramp-file-name-regexp)))
+
+;; recentf stats every entry when it cleans up; over ssh that stalls Emacs.
+(setq recentf-auto-cleanup 'never)
+
+;; Don't auto-register remote dirs as projectile projects (same guard Doom
+;; ships): visiting a file on a server otherwise adds the project to the
+;; known list, and later projectile features try to index it over ssh.
+;; Explicitly invoked SPC p commands inside a remote project still work.
+(setq projectile-ignored-project-function #'file-remote-p)
+
+;; Measured against antpod (~170ms round trip): re-listing a directory costs
+;; 0.8s once the attribute cache has expired, and 0.00s while it is still
+;; warm. The default window is only 10 seconds, so any pause longer than that
+;; makes revisiting a directory expensive again. 60s covers normal browsing.
+;; Cost: a listing can be up to a minute stale - `g' in dired forces a refresh.
+(setq remote-file-name-inhibit-cache 60)
+
+;; Backups of remote files were being *copied to the local trash dir* through
+;; Tramp (backup-directory-alist sends everything there), so the first save
+;; of each session paid a full extra file transfer. No backups for remote
+;; files at all; git is the backup on servers anyway.
+(setq backup-enable-predicate
+      (lambda (name)
+        (and (normal-backup-enable-predicate name)
+             (not (file-remote-p name)))))
+
+;; auto-save (#file#) for remote buffers goes to a local dir, not over ssh
+(setq tramp-auto-save-directory
+      (expand-file-name "tramp-autosave" user-emacs-directory))
+
+;; Make Tramp use the remote login shell's PATH instead of its hardcoded
+;; /usr/bin:/bin. Without this, anything pip/cargo installs on the server
+;; (~/.local/bin - pylsp lives there) is invisible to Emacs.
+(with-eval-after-load 'tramp
+  (add-to-list 'tramp-remote-path 'tramp-own-remote-path))
+
+(defvar-local my/lsp-remote-ok nil
+  "Non-nil when this remote buffer opted in to LSP via `my/lsp-remote-start'.")
+
+(defun my/lsp-skip-remote (orig &rest args)
+  "Don't auto-start LSP on Tramp buffers - only `my/lsp-remote-start' may.
+Root-hunting over ssh costs round trips in every remote buffer, so it
+has to be an explicit per-buffer decision, not a find-file side effect."
+  (unless (and (file-remote-p default-directory)
+               (not my/lsp-remote-ok))
+    (apply orig args)))
+
+;; advice-add works on autoloads, so this catches the first remote file too
+(advice-add 'lsp :around #'my/lsp-skip-remote)
+(advice-add 'lsp-deferred :around #'my/lsp-skip-remote)
+
+(defun my/lighten-remote-buffer ()
+  "Switch off per-keystroke remote round trips in Tramp buffers."
+  (when (file-remote-p default-directory)
+    (when (bound-and-true-p flycheck-mode)
+      (flycheck-mode -1))
+    ;; eldoc runs on *every cursor movement*. With lsp or elpy behind it that
+    ;; is a round trip per keypress - the single worst offender for "typing
+    ;; lags". The article disables it on remote for exactly this reason.
+    (eldoc-mode -1)
+    ;; capf is what company queries; on remote its backends hit the filesystem.
+    ;; Killing it leaves dabbrev-style completion, which is local and instant.
+    (setq-local completion-at-point-functions nil)
+    ;; `company-idle-delay' is 0.0 globally; on a remote buffer that's a
+    ;; completion pass on every keystroke.
+    (setq-local company-idle-delay 0.3)))
+
+;; find-file-hook runs after the major mode and its hooks, so anything
+;; global-flycheck-mode just switched on gets switched back off here.
+(add-hook 'find-file-hook #'my/lighten-remote-buffer)
+
+;; --- doom-modeline ------------------------------------------------------
+;; doom-modeline recomputes the file name, icon, VCS state and env from hooks
+;; that fire constantly. The worst is `evil-insert-state-exit-hook': every
+;; single time you leave insert mode it re-derives the buffer file name, which
+;; over Tramp is a stall on every edit. See doom-modeline-segments.el:355.
+;;
+;; The article removes these hooks outright. Advising instead keeps the
+;; modeline fully working locally and only skips the work on remote buffers.
+(defun my/skip-on-remote (orig &rest args)
+  "Run ORIG only when the current buffer is local."
+  (unless (file-remote-p default-directory)
+    (apply orig args)))
+
+(dolist (fn '(doom-modeline-update-buffer-file-name
+              doom-modeline-update-buffer-file-icon
+              doom-modeline-update-vcs
+              doom-modeline-update-env))
+  (advice-add fn :around #'my/skip-on-remote))
+
+;; --- memoize what gets asked over and over ------------------------------
+;; "If sending calls over TRAMP is so expensive, the best thing we can do is
+;; not run them." `project-current', `vc-git-root' and `magit-toplevel' are
+;; called constantly, and for a given directory the answer never changes.
+(defun memoize-remote (key cache orig-fn &rest args)
+  "Memoize ORIG-FN's result in CACHE when KEY is a remote path."
+  (if (and key (file-remote-p key))
+      (if-let ((current (assoc key (symbol-value cache))))
+          (cdr current)
+        (let ((current (apply orig-fn args)))
+          (set cache (cons (cons key current) (symbol-value cache)))
+          current))
+    (apply orig-fn args)))
+
+(defvar project-current-cache nil)
+(defun memoize-project-current (orig &optional prompt directory)
+  (memoize-remote (or directory
+                      (bound-and-true-p project-current-directory-override)
+                      default-directory)
+                  'project-current-cache orig prompt directory))
+(advice-add 'project-current :around #'memoize-project-current)
+
+(defvar vc-git-root-cache nil)
+(defun memoize-vc-git-root (orig file)
+  (let ((value (memoize-remote (file-name-directory file)
+                               'vc-git-root-cache orig file)))
+    ;; vc-git-root sometimes returns nil even when a root is there; don't
+    ;; cache that or the directory stays broken for the session.
+    (when (null (cdr (car vc-git-root-cache)))
+      (setq vc-git-root-cache (cdr vc-git-root-cache)))
+    value))
+(advice-add 'vc-git-root :around #'memoize-vc-git-root)
+
+(defvar magit-toplevel-cache nil)
+(defun memoize-magit-toplevel (orig &optional directory)
+  (memoize-remote (or directory default-directory)
+                  'magit-toplevel-cache orig directory))
+(advice-add 'magit-toplevel :around #'memoize-magit-toplevel)
+
+(defun tramp-flush-memoized-caches ()
+  "Forget everything `memoize-remote' has cached.
+Run this if a project root or git root changes under you."
+  (interactive)
+  (setq project-current-cache nil
+        vc-git-root-cache nil
+        magit-toplevel-cache nil)
+  (message "Tramp memo caches cleared"))
+
+;; --- magit ---------------------------------------------------------------
+;; A single magit command can be 30 shell invocations. Prefer `magit-dispatch'
+;; and `magit-file-dispatch' over the status buffer on remote repos.
+(with-eval-after-load 'magit
+  (setq magit-commit-show-diff nil          ; C-c C-d shows it on demand
+        magit-branch-direct-configure nil   ; don't read git vars in branch menu
+        magit-refresh-status-buffer nil))   ; refresh manually with g
+
+;; lsp-mode only starts servers on remote files through clients registered
+;; with :remote? t. Register tramp-aware copies of the two servers I use.
+(with-eval-after-load 'lsp-mode
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection "pylsp")
+                    :major-modes '(python-mode python-ts-mode)
+                    :remote? t
+                    :server-id 'pylsp-remote))
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-tramp-connection "clangd")
+                    :major-modes '(c-mode c++-mode)
+                    :remote? t
+                    :server-id 'clangd-remote)))
+
+(defun my/lsp-remote-start ()
+  "Opt this remote buffer in to LSP and start it.
+Undoes the per-buffer economies from `my/lighten-remote-buffer' that LSP
+needs back, then starts lsp. The server must exist on the remote host."
+  (interactive)
+  (unless (file-remote-p default-directory)
+    (user-error "Local buffer - LSP already starts automatically here"))
+  (setq my/lsp-remote-ok t)
+  ;; my/lighten-remote-buffer nils capf buffer-locally; drop that override so
+  ;; lsp-completion-mode can install its completion function
+  (kill-local-variable 'completion-at-point-functions)
+  (eldoc-mode 1)
+  (lsp))
+
+;; antpod - mirrors the `antpod' alias in ~/.zshrc. Non-default port goes after
+;; a #; the -i ~/.ssh/id_ed25519 from the alias is redundant here since ssh
+;; tries that key by default.
 (defun visit-remote-project-1 ()
   (interactive)
-  (find-file "/ssh:edward@uril-1.cs.ucla.edu:~/"))
+  (find-file "/ssh:edwardosunny@198.145.108.45#15358:~/"))
+;; petri1 - mirrors the `petri1' alias in ~/.zshrc (autoresearch petri).
 (defun visit-remote-project-2 ()
   (interactive)
-  (find-file "/ssh:edward@scai3.cs.ucla.edu:~/"))
+  (find-file "/ssh:root@213.173.110.225#28297:~/"))
 (defun visit-remote-project-3 ()
   (interactive)
   (find-file "/ssh:edward@scai4.cs.ucla.edu:~/"))
@@ -524,6 +973,24 @@ any other key exits this function."
 (defun visit-remote-project-5 ()
   (interactive)
   (find-file "/ssh:ubuntu@104.171.203.34:~/"))
+
+(defun dired-local-home ()
+  "Open dired on the local home directory, even from a Tramp buffer."
+  (interactive)
+  ;; `expand-file-name' resolves ~ against the local HOME regardless of a
+  ;; remote `default-directory', so this is always local.
+  (dired (expand-file-name "~/")))
+
+(defun tramp-disconnect-here ()
+  "Drop the Tramp connection this buffer is using.
+Buffers stay open and silently reconnect next time they're touched."
+  (interactive)
+  (tramp-cleanup-this-connection))
+
+(defun tramp-disconnect-everything ()
+  "Drop every Tramp connection and kill all remote buffers."
+  (interactive)
+  (tramp-cleanup-all-buffers))
 
 (use-package auctex)
 
@@ -565,7 +1032,7 @@ any other key exits this function."
 (setq display-line-numbers-type 'relative) 
 (global-display-line-numbers-mode)
 
-;; increase font size
+  ;; increase font size
   (set-face-attribute 'default nil :height 140)
 
   ;; (set-face-attribute 'default nil
@@ -593,15 +1060,21 @@ any other key exits this function."
 
   ;; Needed if using emacsclient. Otherwise, your fonts will be smaller than expected.
   ;; (add-to-list 'default-frame-alist '(font . "Ubuntu"))
-;; changes certain keywords to symbols, such as lamda!
- (setq global-prettify-symbols-mode t)
+;; changes certain keywords to symbols, such as lambda!
+;; (this was a `setq' on the mode variable before, which never actually
+;; turned the mode on - it needs to be called as a function)
+(global-prettify-symbols-mode 1)
 
 (use-package all-the-icons
     :if (display-graphic-p)
 )
 
 (use-package all-the-icons-dired
-    :hook (dired-mode . (lambda () (all-the-icons-dired-mode t)))
+    ;; Icons stat every entry to pick a glyph. In a local dired that's free; in
+    ;; a Tramp dired it's one round trip per file, so skip it on remote paths.
+    :hook (dired-mode . (lambda ()
+                          (unless (file-remote-p default-directory)
+                            (all-the-icons-dired-mode t))))
 )
 ;; run M-x all-the-icons-install-fonts if fonts not showing up
 
@@ -645,8 +1118,6 @@ any other key exits this function."
   :config
   (dashboard-setup-startup-hook))
 
-(use-package all-the-icons)
-
 (use-package doom-modeline
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
@@ -683,6 +1154,12 @@ any other key exits this function."
 (add-hook 'minibuffer-inactive-mode-hook (lambda () (auto-revert-mode -1)))
 
 (setq auto-revert-remote-files nil)
+
+(savehist-mode 1)            ;; Minibuffer history (M-x, file prompts, swiper) survives restarts.
+(save-place-mode 1)          ;; Reopening a file puts point back where it was last time.
+;; save-place normally stats every remembered file when saving its list;
+;; with remote files in the list that means ssh round trips on exit.
+(setq save-place-forget-unreadable-files nil)
 
 (global-display-line-numbers-mode 1) ;; Display line numbers
 (global-visual-line-mode t)  ;; Enable truncated lines
@@ -830,6 +1307,19 @@ any other key exits this function."
 
 (require `org-tempo)
 
+(use-package sudo-edit
+  :commands (sudo-edit sudo-edit-find-file))
+
+(defun dt/show-and-copy-buffer-path ()
+  "Show the full path of the current file in the minibuffer and copy it."
+  (interactive)
+  (let ((file-name (or (buffer-file-name) list-buffers-directory)))
+    (if file-name
+        (progn
+          (message "%s" file-name)
+          (kill-new file-name))
+      (error "Buffer not visiting a file"))))
+
 (use-package general
   :config
   (general-evil-setup t)
@@ -843,11 +1333,41 @@ any other key exits this function."
     "b p"   '(previous-buffer :which-key "previous buffer")
     "b B"   '(ibuffer-list-buffers :which-key "ibuffer list buffers")
     "b D"   '(kill-buffer :which-key "kill buffer")
-    ;; search 
+    ;; search
     "/" '(swiper :wk "swiper search")
-    ;; comment 
+    ;; code: xref binds pick lsp when it's running, dumb-jump/rg otherwise,
+    ;; so they work in remote buffers too (see Code Navigation)
+    "c" '(:ignore t :wk "code")
     "c c" '(comment-line :wk "comment lines")
-    ;; help 
+    "c a" '(lsp-execute-code-action :wk "code action")
+    "c b" '(xref-go-back :wk "go back from definition")
+    "c d" '(xref-find-definitions :wk "find definition")
+    "c D" '(xref-find-references :wk "find references")
+    "c e" '(flycheck-list-errors :wk "list errors")
+    "c f" '(apheleia-format-buffer :wk "format buffer")
+    "c h" '(lsp-describe-thing-at-point :wk "hover docs")
+    "c n" '(flycheck-next-error :wk "next error")
+    "c p" '(flycheck-previous-error :wk "previous error")
+    "c R" '(lsp-rename :wk "rename symbol (lsp)")
+    "c s" '(counsel-imenu :wk "jump to symbol in buffer")
+    ;; git
+    "g" '(:ignore t :wk "git")
+    "g g" '(magit-status :wk "magit status")
+    "g d" '(magit-dispatch :wk "magit dispatch (cheap on tramp)")
+    "g f" '(magit-file-dispatch :wk "magit file dispatch")
+    "g b" '(magit-blame-addition :wk "git blame")
+    "g l" '(magit-log-buffer-file :wk "log for this file")
+    "g j" '(diff-hl-next-hunk :wk "next changed hunk")
+    "g k" '(diff-hl-previous-hunk :wk "previous changed hunk")
+    "g s" '(diff-hl-stage-current-hunk :wk "stage hunk at point")
+    "g x" '(diff-hl-revert-hunk :wk "revert hunk at point")
+    ;; jump (avy)
+    "j" '(:ignore t :wk "jump")
+    "j j" '(avy-goto-char-timer :wk "jump to visible text")
+    "j l" '(avy-goto-line :wk "jump to visible line")
+    ;; undo tree
+    "u" '(vundo :wk "visual undo tree")
+    ;; help
     "h" '(:ignore t :wk "help")
     "hf" '(describe-function :wk "describe function") ;; if working in elisp ONLY file
     "hv" '(describe-variable :wk "describe variable")
@@ -862,6 +1382,7 @@ any other key exits this function."
     "fs"   '(save-buffer :which-key "save file")
     "fu"   '(sudo-edit-find-file :which-key "sudo find file")
     "fy"   '(dt/show-and-copy-buffer-path :which-key "yank file path")
+    "fh"   '(dired-local-home :which-key "dired LOCAL home (escape tramp)")
     "fC"   '(copy-file :which-key "copy file")
     "fD"   '(delete-file :which-key "delete file")
     "fR"   '(rename-file :which-key "rename file")
@@ -891,10 +1412,14 @@ any other key exits this function."
     ;; terminal
     "ot" '(eshell-toggle :wk "toggle eshell")
     "oT" '(eshell-new :wk "open new eshell")
+    "ov" '(vterm :wk "open vterm")
+    "oV" '(vterm-other-window :wk "open vterm other window")
     ;; perspective.el workspaces
     "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
     ;; projectile
     "p" `(projectile-command-map :wk "Projectile command map")
+    ;; claude code (full command map is on C-c c)
+    "a" '(claude-code-transient :wk "claude code menu")
     ;; AUCTex bindings
     ;; previewing 
     "lpp" '(preview-buffer :wk "preview current latex buffer") 
@@ -904,12 +1429,17 @@ any other key exits this function."
     "lca" '(TeX-command-run-all :wk "compile current document") 
     ;; speedbar "file tree"
     "sb"  '(speedbar :wk "toggle speedbar file summary/tree") 
-    ;; ssh
-    "r1"  '(visit-remote-project-1 :wk "connect to the server 1") 
-    "r2"  '(visit-remote-project-2 :wk "connect to the server 2") 
+    ;; ssh / remote
+    "r" '(:ignore t :wk "remote")
+    "r l" '(my/lsp-remote-start :wk "start LSP in this remote buffer")
+    "r1"  '(visit-remote-project-1 :wk "connect to antpod")
+    "r2"  '(visit-remote-project-2 :wk "connect to petri1")
     "r3"  '(visit-remote-project-3 :wk "connect to the server 3") 
     "r4"  '(visit-remote-project-4 :wk "connect to the server 4") 
-    "r5"  '(visit-remote-project-5 :wk "connect to the server 5") 
+    "r5"  '(visit-remote-project-5 :wk "connect to the server 5")
+    ;; disconnecting
+    "rd"  '(tramp-disconnect-here :wk "drop this tramp connection")
+    "rD"  '(tramp-disconnect-everything :wk "drop ALL tramp conns + buffers")
     ;; org
     "oc"  '(org-capture :wk "org capture")
     ;; org roam

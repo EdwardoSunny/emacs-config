@@ -12,7 +12,6 @@ sessions
 elpy/
 .cache/
 .lsp-session-*
-codeium/
 projects
 tramp
 request/
@@ -20,3 +19,5 @@ transient/
 
 *.db
 
+history
+places

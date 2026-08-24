@@ -1,0 +1,3 @@
+[submodule "lisp/chronoscope"]
+	path = lisp/chronoscope
+	url = git@github.com:EdwardoSunny/chronoscope.el.git

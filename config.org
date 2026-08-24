@@ -16,6 +16,7 @@
   - [[#search-help--theming][Search, Help & Theming]]
   - [[#org-mode--org-roam][Org Mode & Org-roam]]
   - [[#terminal-eshell--remote-machines][Terminal, Eshell & Remote Machines]]
+  - [[#timer--stopwatch-chronoscope][Timer & Stopwatch (Chronoscope)]]
   - [[#latex--auctex][LaTeX / AUCTeX]]
   - [[#coding-ide-features][Coding (IDE Features)]]
   - [[#ai-assistant][AI Assistant]]
@@ -76,6 +77,7 @@
   - [[#org-bullets][Org Bullets]]
   - [[#highlight-todo][Highlight TODO]]
   - [[#quick-block-creation-with-org-tempo][Quick Block Creation with Org Tempo]]
+- [[#chronoscope-timer--stopwatch][Chronoscope (Timer & Stopwatch)]]
 - [[#key-bindings][Key Bindings]]
   - [[#missing-pieces-for-existing-binds][Missing Pieces for Existing Binds]]
   - [[#generalel-keybindings][General.el Keybindings]]
@@ -111,6 +113,7 @@ Here's a guide to the keybinds in my configuration.
 - Roam → =SPC o f~, =SPC o l~, =SPC o g=
 - Eshell → =SPC o t~, =SPC o T=
 - Vterm → =SPC o v~, =SPC o V=
+- Timer/Stopwatch → =SPC o s=, =SPC o S=
 - LaTeX → =SPC l …=
 - SSH → =SPC r 1–5=, remote LSP → =SPC r l=
 - Claude Code → =SPC a= (menu), =C-c c …= (full map)
@@ -375,6 +378,49 @@ Everything inherits ~default-directory~, so one remote buffer makes everything e
 | Key        | Context            | Command     | Description                 |
 |------------+--------------------+-------------+-----------------------------|
 | ~SPC s b~  | Evil normal/visual | ~speedbar~  | Toggle Speedbar tree        |
+
+---
+
+** Timer & Stopwatch (Chronoscope)
+
+My own package, [[https://github.com/EdwardoSunny/chronoscope.el][chronoscope.el]] (vendored as a git submodule at =lisp/chronoscope/=): one
+dedicated buffer that is either a stopwatch or a
+countdown timer, drawn with big block digits and a live ASCII animation underneath. There are
+30+ animations — a tumbling 3D wireframe cube, a rotating shaded globe, the donut.c torus,
+Matrix rain, flames, fireworks, a warp starfield, a spinning tunnel, demoscene plasma, a
+galaxy, a DNA helix, Conway's Game of Life, a radar sweep, self-playing snake and pong, space
+invaders, a lava lamp, wandering eyes that blink, an analog clock, a pendulum, an ECG trace,
+parallax mountains, a rocket launch, a sailboat, shooting stars, an aquarium, a steam train, a
+sleeping cat, rainfall, the bouncing DVD box, waves, orbits and more. A random one is picked
+whenever the buffer (re)opens; ~a~ cycles through the rest, and timer mode adds an hourglass
+whose sand drains with the countdown. Animations render in a muted Nord-ish palette; ~c~ (or
+=chronoscope-colors=) flips between color and monochrome. Setup lives in
+[[#chronoscope-timer--stopwatch][Chronoscope (Timer & Stopwatch)]].
+
+| Key          | Context            | Command              | Description                                |
+|--------------+--------------------+----------------------+--------------------------------------------|
+| ~SPC o s~    | Evil normal/visual | ~chronoscope~        | Open the stopwatch/timer buffer            |
+| ~SPC o S~    | Evil normal/visual | ~chronoscope-timer~  | Start a countdown (prompts for duration)   |
+
+Durations understand =25= (minutes), =90s=, =25m=, =1h30m=, =12:30= (mm:ss) and =1:02:03=
+(h:mm:ss). When a countdown hits zero it dings, flashes TIME'S UP and keeps counting overtime
+until reset. The clock is computed from wall time, so pausing, burying the buffer or a busy
+Emacs never skews it — the display timer only drives redraws.
+
+Inside the buffer (evil normal state):
+
+| Key     | Command                         | Description                            |
+|---------+---------------------------------+----------------------------------------|
+| ~s~     | ~chronoscope-toggle~            | Start / pause                          |
+| ~r~     | ~chronoscope-reset~             | Reset the clock                        |
+| ~l~     | ~chronoscope-lap~               | Record a lap (stopwatch only)          |
+| ~t~     | ~chronoscope-set-timer~         | Set a new countdown                    |
+| ~m~     | ~chronoscope-switch-mode~       | Flip stopwatch ↔ timer                 |
+| ~a~     | ~chronoscope-cycle-animation~   | Next animation                         |
+| ~c~     | ~chronoscope-toggle-colors~     | Color ↔ monochrome animations          |
+| ~+~/~-~ | ~chronoscope-plus/minus-minute~ | Add / drop a minute mid-countdown      |
+| ~q~     | ~quit-window~                   | Bury the buffer (clock keeps running)  |
+| ~Q~     | ~chronoscope-kill~              | Kill the buffer (stops the clock)      |
 
 ---
 
@@ -2553,6 +2599,27 @@ From DistroTube's config
 (require `org-tempo)
 #+end_src
 
+* Chronoscope (Timer & Stopwatch)
+My own package, [[https://github.com/EdwardoSunny/chronoscope.el][chronoscope.el]] — a full-buffer stopwatch and countdown timer with big block
+digits and 30+ ASCII animations (a spinning cube, a shaded globe, the donut.c torus, Matrix
+rain, fire, fireworks, a radar sweep, self-playing snake and pong, space invaders, a lava
+lamp, a rocket launch, Conway's Life, an aquarium, a steam train, a sleeping cat and more — a
+random one on open, ~a~ to cycle, ~c~ to flip color/monochrome, and timers add a draining
+hourglass).
+
+It's vendored as a *git submodule* at =lisp/chronoscope/=, so on a fresh clone of this config
+run =git submodule update --init= first. =:straight nil= keeps straight.el from trying to
+clone it, and =:commands= defers loading until an entry point is actually called. The
+in-buffer keys (~s~, ~r~, ~l~, ~t~, ~m~, ~a~, ~c~, ~q~ …) are defined by the package itself in
+evil normal state; the =SPC o s= / =SPC o S= launchers live in [[#generalel-keybindings][General.el Keybindings]] and the
+day-to-day reference is [[#timer--stopwatch-chronoscope][Timer & Stopwatch (Chronoscope)]].
+#+begin_src emacs-lisp
+(use-package chronoscope
+  :straight nil
+  :load-path "lisp/chronoscope"
+  :commands (chronoscope chronoscope-stopwatch chronoscope-timer))
+#+end_src
+
 * Key Bindings
 ** Missing Pieces for Existing Binds
 =SPC f u=, =SPC f U= and =SPC f y= have been in the leader map since the beginning, but the
@@ -2670,6 +2737,9 @@ so all three just errored. Provide both.
     "oT" '(eshell-new :wk "open new eshell")
     "ov" '(vterm :wk "open vterm")
     "oV" '(vterm-other-window :wk "open vterm other window")
+    ;; chronoscope timer/stopwatch (local package, see Chronoscope section)
+    "os" '(chronoscope :wk "stopwatch/timer buffer")
+    "oS" '(chronoscope-timer :wk "start countdown timer")
     ;; perspective.el workspaces
     "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
     ;; projectile

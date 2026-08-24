@@ -1307,6 +1307,11 @@ Buffers stay open and silently reconnect next time they're touched."
 
 (require `org-tempo)
 
+(use-package chronoscope
+  :straight nil
+  :load-path "lisp/chronoscope"
+  :commands (chronoscope chronoscope-stopwatch chronoscope-timer))
+
 (use-package sudo-edit
   :commands (sudo-edit sudo-edit-find-file))
 
@@ -1414,6 +1419,9 @@ Buffers stay open and silently reconnect next time they're touched."
     "oT" '(eshell-new :wk "open new eshell")
     "ov" '(vterm :wk "open vterm")
     "oV" '(vterm-other-window :wk "open vterm other window")
+    ;; chronoscope timer/stopwatch (local package, see Chronoscope section)
+    "os" '(chronoscope :wk "stopwatch/timer buffer")
+    "oS" '(chronoscope-timer :wk "start countdown timer")
     ;; perspective.el workspaces
     "TAB" '(perspective-map :wk "Perspective") ;; Lists all the perspective keybindings
     ;; projectile

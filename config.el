@@ -1293,12 +1293,12 @@ Buffers stay open and silently reconnect next time they're touched."
       :unnarrowed t)
      ("P" "project (research)" plain
       "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* Related Literature\n\n* Resources\n"
-      :if-new (file+head "projects/research/${slug}.org"
+      :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:research:\n#+date: %U\n")
       :unnarrowed t)
      ("j" "project (personal)" plain
       "%?"
-      :if-new (file+head "projects/personal/${slug}.org"
+      :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:personal:\n#+date: %U\n")
       :unnarrowed t)
      ("n" "person" plain 
@@ -1341,8 +1341,7 @@ Buffers stay open and silently reconnect next time they're touched."
   (setq org-agenda-files
         (list (expand-file-name "todo.org" org-roam-directory)
               (expand-file-name "refile.org" org-roam-directory)
-              (expand-file-name "projects/research" org-roam-directory)
-              (expand-file-name "projects/personal" org-roam-directory))))
+              (expand-file-name "projects" org-roam-directory))))
 
 (setq org-deadline-warning-days 7)
 

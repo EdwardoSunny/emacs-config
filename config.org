@@ -299,7 +299,7 @@ Changed lines show in the fringe (diff-hl). On Tramp repos prefer =SPC g d= / =S
 | ~SPC o g~    | Evil normal/visual | ~org-roam-ui-mode~        | Open Org-roam graph UI                        |
 | ~SPC o r~    | Evil normal/visual | ~my/org-roam-sync~        | Sync notes repo now (auto: start, quit, every 30 min) |
 
-Notes are organized as project nodes (=projects/research/=, =projects/personal/=) with
+Notes are organized as project nodes (=projects/=, tagged =:research:= or =:personal:=) with
 =todo.org= as the single dashboard for every TODO/priority/deadline, and the whole folder
 syncs through a private git repo — see [[#organization-projects--central-dashboard][Organization]] and [[#syncing-across-machines-git][Syncing]].
 
@@ -2576,12 +2576,12 @@ Basic configs:
       :unnarrowed t)
      ("P" "project (research)" plain
       "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* Related Literature\n\n* Resources\n"
-      :if-new (file+head "projects/research/${slug}.org"
+      :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:research:\n#+date: %U\n")
       :unnarrowed t)
      ("j" "project (personal)" plain
       "%?"
-      :if-new (file+head "projects/personal/${slug}.org"
+      :if-new (file+head "projects/${slug}.org"
                          "#+title: ${title}\n#+filetags: :project:personal:\n#+date: %U\n")
       :unnarrowed t)
      ("n" "person" plain 
@@ -2622,9 +2622,12 @@ Basic configs:
 *** Organization: projects + central dashboard
 How the roam folder is organized (the point: documents link to projects, todos live in ONE
 place):
-- =projects/research/= and =projects/personal/= — one org-roam node per project, holding all
-  the details. Papers, ideas, concepts and meetings link to their project node with normal
-  roam links, so a project's node backlinks (=SPC o l=) collect everything about it.
+- =projects/= — one org-roam node per project, holding all the details. Research vs personal
+  is a *tag* (=:research:= / =:personal:=, set automatically by the capture template — =P= or
+  =j=), not a folder: org-roam is folder-agnostic, and tags are filterable in =SPC o f= and
+  the agenda where folders are not. Papers, ideas, concepts and meetings link to their
+  project node with normal roam links, so a project's backlinks (=SPC o l=) collect
+  everything about it.
 - =todo.org= — the *central dashboard*: every TODO, priority (=[#A]=) and deadline, one
   heading per project linking to its node. This is the only file to check in the morning.
 - =refile.org= — quick-capture inbox (=SPC o c r=); refile entries out with =C-c C-w=.
@@ -2639,8 +2642,7 @@ place):
   (setq org-agenda-files
         (list (expand-file-name "todo.org" org-roam-directory)
               (expand-file-name "refile.org" org-roam-directory)
-              (expand-file-name "projects/research" org-roam-directory)
-              (expand-file-name "projects/personal" org-roam-directory))))
+              (expand-file-name "projects" org-roam-directory))))
 
 (setq org-deadline-warning-days 7)
 

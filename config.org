@@ -292,10 +292,16 @@ Changed lines show in the fringe (diff-hl). On Tramp repos prefer =SPC g d= / =S
 
 | Key          | Context            | Command                   | Description                                  |
 |--------------+--------------------+---------------------------+----------------------------------------------|
-| ~SPC o c~    | Evil normal/visual | ~org-capture~             | Capture note                                  |
+| ~SPC o a~    | Evil normal/visual | ~org-agenda~              | Central agenda: todos, priorities, deadlines (=d= for dashboard view) |
+| ~SPC o c~    | Evil normal/visual | ~org-capture~             | Capture note (=r= drops into the roam inbox) |
 | ~SPC o f~    | Evil normal/visual | ~org-roam-node-find~      | Find/create Org-roam node                    |
 | ~SPC o l~    | Evil normal/visual | ~org-roam-buffer-toggle~  | Toggle backlinks buffer                       |
 | ~SPC o g~    | Evil normal/visual | ~org-roam-ui-mode~        | Open Org-roam graph UI                        |
+| ~SPC o r~    | Evil normal/visual | ~my/org-roam-sync~        | Sync notes repo now (auto-syncs every 30 min) |
+
+Notes are organized as project nodes (=projects/research/=, =projects/personal/=) with
+=todo.org= as the single dashboard for every TODO/priority/deadline, and the whole folder
+syncs through a private git repo — see [[#organization-projects--central-dashboard][Organization]] and [[#syncing-across-machines-git][Syncing]].
 
 *** Org-roam Insert
 
@@ -2568,10 +2574,15 @@ Basic configs:
       :if-new (file+head "meetings/${slug}.org"
                          "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
       :unnarrowed t)
-     ("P" "project" plain 
-      "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* DO-List\n\n* Related Literature\n\n* Resources\n"
-      :if-new (file+head "projects/${slug}.org"
-                         "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
+     ("P" "project (research)" plain
+      "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* Related Literature\n\n* Resources\n"
+      :if-new (file+head "projects/research/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :project:research:\n#+date: %U\n")
+      :unnarrowed t)
+     ("j" "project (personal)" plain
+      "%?"
+      :if-new (file+head "projects/personal/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :project:personal:\n#+date: %U\n")
       :unnarrowed t)
      ("n" "person" plain 
       "* Affiliation\n%?\n\n* Research Interests\n\n* Areas of Expertise\n\n* Interesting Publications\n\n- [[roam:]]\n\n* Notes\n\n* Related Projects\n\n* Meetings\n"
@@ -2608,7 +2619,106 @@ Basic configs:
         org-refile-allow-creating-parent-nodes 'confirm))
 #+end_src
 
-*** Org-roam-ui 
+*** Organization: projects + central dashboard
+How the roam folder is organized (the point: documents link to projects, todos live in ONE
+place):
+- =projects/research/= and =projects/personal/= — one org-roam node per project, holding all
+  the details. Papers, ideas, concepts and meetings link to their project node with normal
+  roam links, so a project's node backlinks (=SPC o l=) collect everything about it.
+- =todo.org= — the *central dashboard*: every TODO, priority (=[#A]=) and deadline, one
+  heading per project linking to its node. This is the only file to check in the morning.
+- =refile.org= — quick-capture inbox (=SPC o c r=); refile entries out with =C-c C-w=.
+
+=SPC o a= opens the agenda over the dashboard, the inbox and every project file:
+- =a= — the week view: deadlines and scheduled items, day by day
+- =d= — the dashboard view: week agenda plus every open TODO sorted by priority
+#+begin_src emacs-lisp
+;; the agenda reads the dashboard, the inbox and every project node.
+;; (directory entries include each .org file directly inside them)
+(with-eval-after-load 'org-roam
+  (setq org-agenda-files
+        (list (expand-file-name "todo.org" org-roam-directory)
+              (expand-file-name "refile.org" org-roam-directory)
+              (expand-file-name "projects/research" org-roam-directory)
+              (expand-file-name "projects/personal" org-roam-directory))))
+
+(setq org-deadline-warning-days 7)
+
+(setq org-agenda-custom-commands
+      '(("d" "Dashboard: week agenda + all TODOs by priority"
+         ((agenda "" ((org-agenda-span 7)))
+          (alltodo ""
+                   ((org-agenda-sorting-strategy '(priority-down category-keep))
+                    (org-agenda-overriding-header "All open TODOs (priority first)")))))))
+#+end_src
+
+*** Syncing across machines (git)
+=~/org-roam= is a private git repo ([[https://github.com/EdwardoSunny/org-roam][EdwardoSunny/org-roam]]). Fully reproducible: on a
+machine where the directory doesn't exist, the config clones it on startup. From there:
+- every save inside the roam folder auto-commits locally, so there is per-edit history even
+  offline
+- a pull runs shortly after startup and a full sync (commit + pull --rebase + push) runs in
+  the background every 30 minutes
+- =SPC o r= syncs right now (e.g. before closing the laptop); failures land in the
+  =*org-roam-sync*= buffer
+
+Conflicts are rare with frequent syncs, but if two machines edit the same lines, the
+background pull --rebase stops and reports; resolve in the roam folder like any rebase.
+#+begin_src emacs-lisp
+;; clone the notes repo if this machine doesn't have it yet
+(with-eval-after-load 'org-roam
+  (let ((dir (expand-file-name org-roam-directory)))
+    (unless (file-directory-p dir)
+      (message "org-roam directory missing, cloning it...")
+      (call-process "git" nil "*org-roam-sync*" nil "clone"
+                    "git@github.com:EdwardoSunny/org-roam.git" dir))))
+
+(defun my/org-roam-sync (&optional quiet)
+  "Commit, pull --rebase and push the org-roam repo, asynchronously."
+  (interactive)
+  (let ((default-directory (expand-file-name org-roam-directory)))
+    (if (not (file-directory-p ".git"))
+        (unless quiet (message "org-roam is not a git repo"))
+      (let ((proc (start-process-shell-command
+                   "org-roam-sync" "*org-roam-sync*"
+                   (concat "git add -A && "
+                           "(git diff --cached --quiet || git commit -m \"sync from $(hostname -s)\") && "
+                           "git pull --rebase --autostash && git push"))))
+        ;; the tangled config.el is not lexically bound, so pass QUIET
+        ;; through the process object instead of a closure
+        (process-put proc 'org-roam-sync-quiet quiet)
+        (set-process-sentinel
+         proc (lambda (p _e)
+                (if (zerop (process-exit-status p))
+                    (unless (process-get p 'org-roam-sync-quiet)
+                      (message "org-roam synced"))
+                  (message "org-roam sync FAILED — see *org-roam-sync*"))))))))
+
+;; pull shortly after startup, then a quiet full sync every 30 minutes.
+;; the defvar guard keeps a config reload (SPC h r r) from stacking timers.
+(defvar my/org-roam-sync-timer nil)
+(unless my/org-roam-sync-timer
+  (run-at-time 15 nil (lambda () (my/org-roam-sync t)))
+  (setq my/org-roam-sync-timer
+        (run-at-time 1800 1800 (lambda () (my/org-roam-sync t)))))
+
+;; every save inside the roam folder commits locally: per-edit history,
+;; works offline, and the next sync pushes it all
+(defun my/org-roam--auto-commit ()
+  (when (and buffer-file-name
+             (bound-and-true-p org-roam-directory)
+             (file-in-directory-p buffer-file-name org-roam-directory)
+             (file-directory-p (expand-file-name ".git" org-roam-directory)))
+    (let ((default-directory (expand-file-name org-roam-directory)))
+      (start-process-shell-command
+       "org-roam-autocommit" nil
+       (format "git add -A && (git diff --cached --quiet || git commit -m %s)"
+               (shell-quote-argument
+                (concat "edit " (file-name-nondirectory buffer-file-name))))))))
+(add-hook 'after-save-hook #'my/org-roam--auto-commit)
+#+end_src
+
+*** Org-roam-ui
 Graph view for org-roam like obsidian
 
 #+begin_src emacs-lisp
@@ -2902,7 +3012,9 @@ so all three just errored. Provide both.
     "rd"  '(tramp-disconnect-here :wk "drop this tramp connection")
     "rD"  '(tramp-disconnect-everything :wk "drop ALL tramp conns + buffers")
     ;; org
+    "oa"  '(org-agenda :wk "org agenda (central todos)")
     "oc"  '(org-capture :wk "org capture")
+    "or"  '(my/org-roam-sync :wk "sync org-roam (git)")
     ;; org roam
     "of"  '(org-roam-node-find :wk "org roam find node")
     "ol"  '(org-roam-buffer-toggle :wk "org roam buffer toggle")

@@ -1291,10 +1291,15 @@ Buffers stay open and silently reconnect next time they're touched."
       :if-new (file+head "meetings/${slug}.org"
                          "#+title: ${title}\n#+filetags: :meeting:\n#+date: %U\n")
       :unnarrowed t)
-     ("P" "project" plain 
-      "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* DO-List\n\n* Related Literature\n\n* Resources\n"
-      :if-new (file+head "projects/${slug}.org"
-                         "#+title: ${title}\n#+filetags: :project:\n#+date: %U\n")
+     ("P" "project (research)" plain
+      "* Methods Overview\n%?\n\n* Long Term Milestones\n\n* Related Literature\n\n* Resources\n"
+      :if-new (file+head "projects/research/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :project:research:\n#+date: %U\n")
+      :unnarrowed t)
+     ("j" "project (personal)" plain
+      "%?"
+      :if-new (file+head "projects/personal/${slug}.org"
+                         "#+title: ${title}\n#+filetags: :project:personal:\n#+date: %U\n")
       :unnarrowed t)
      ("n" "person" plain 
       "* Affiliation\n%?\n\n* Research Interests\n\n* Areas of Expertise\n\n* Interesting Publications\n\n- [[roam:]]\n\n* Notes\n\n* Related Projects\n\n* Meetings\n"
@@ -1329,6 +1334,76 @@ Buffers stay open and silently reconnect next time they're touched."
   (setq org-outline-path-complete-in-steps nil
         org-refile-use-outline-path 'file
         org-refile-allow-creating-parent-nodes 'confirm))
+
+;; the agenda reads the dashboard, the inbox and every project node.
+;; (directory entries include each .org file directly inside them)
+(with-eval-after-load 'org-roam
+  (setq org-agenda-files
+        (list (expand-file-name "todo.org" org-roam-directory)
+              (expand-file-name "refile.org" org-roam-directory)
+              (expand-file-name "projects/research" org-roam-directory)
+              (expand-file-name "projects/personal" org-roam-directory))))
+
+(setq org-deadline-warning-days 7)
+
+(setq org-agenda-custom-commands
+      '(("d" "Dashboard: week agenda + all TODOs by priority"
+         ((agenda "" ((org-agenda-span 7)))
+          (alltodo ""
+                   ((org-agenda-sorting-strategy '(priority-down category-keep))
+                    (org-agenda-overriding-header "All open TODOs (priority first)")))))))
+
+;; clone the notes repo if this machine doesn't have it yet
+(with-eval-after-load 'org-roam
+  (let ((dir (expand-file-name org-roam-directory)))
+    (unless (file-directory-p dir)
+      (message "org-roam directory missing, cloning it...")
+      (call-process "git" nil "*org-roam-sync*" nil "clone"
+                    "git@github.com:EdwardoSunny/org-roam.git" dir))))
+
+(defun my/org-roam-sync (&optional quiet)
+  "Commit, pull --rebase and push the org-roam repo, asynchronously."
+  (interactive)
+  (let ((default-directory (expand-file-name org-roam-directory)))
+    (if (not (file-directory-p ".git"))
+        (unless quiet (message "org-roam is not a git repo"))
+      (let ((proc (start-process-shell-command
+                   "org-roam-sync" "*org-roam-sync*"
+                   (concat "git add -A && "
+                           "(git diff --cached --quiet || git commit -m \"sync from $(hostname -s)\") && "
+                           "git pull --rebase --autostash && git push"))))
+        ;; the tangled config.el is not lexically bound, so pass QUIET
+        ;; through the process object instead of a closure
+        (process-put proc 'org-roam-sync-quiet quiet)
+        (set-process-sentinel
+         proc (lambda (p _e)
+                (if (zerop (process-exit-status p))
+                    (unless (process-get p 'org-roam-sync-quiet)
+                      (message "org-roam synced"))
+                  (message "org-roam sync FAILED — see *org-roam-sync*"))))))))
+
+;; pull shortly after startup, then a quiet full sync every 30 minutes.
+;; the defvar guard keeps a config reload (SPC h r r) from stacking timers.
+(defvar my/org-roam-sync-timer nil)
+(unless my/org-roam-sync-timer
+  (run-at-time 15 nil (lambda () (my/org-roam-sync t)))
+  (setq my/org-roam-sync-timer
+        (run-at-time 1800 1800 (lambda () (my/org-roam-sync t)))))
+
+;; every save inside the roam folder commits locally: per-edit history,
+;; works offline, and the next sync pushes it all
+(defun my/org-roam--auto-commit ()
+  (when (and buffer-file-name
+             (bound-and-true-p org-roam-directory)
+             (file-in-directory-p buffer-file-name org-roam-directory)
+             (file-directory-p (expand-file-name ".git" org-roam-directory)))
+    (let ((default-directory (expand-file-name org-roam-directory)))
+      (start-process-shell-command
+       "org-roam-autocommit" nil
+       (format "git add -A && (git diff --cached --quiet || git commit -m %s)"
+               (shell-quote-argument
+                (concat "edit " (file-name-nondirectory buffer-file-name))))))))
+(add-hook 'after-save-hook #'my/org-roam--auto-commit)
 
 (use-package org-roam-ui
   :straight
@@ -1552,7 +1627,9 @@ Buffers stay open and silently reconnect next time they're touched."
     "rd"  '(tramp-disconnect-here :wk "drop this tramp connection")
     "rD"  '(tramp-disconnect-everything :wk "drop ALL tramp conns + buffers")
     ;; org
+    "oa"  '(org-agenda :wk "org agenda (central todos)")
     "oc"  '(org-capture :wk "org capture")
+    "or"  '(my/org-roam-sync :wk "sync org-roam (git)")
     ;; org roam
     "of"  '(org-roam-node-find :wk "org roam find node")
     "ol"  '(org-roam-buffer-toggle :wk "org roam buffer toggle")

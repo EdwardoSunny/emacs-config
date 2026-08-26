@@ -21,3 +21,6 @@ transient/
 
 history
 places
+undo-fu-session/
+.org-id-locations
+org-roam.db

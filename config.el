@@ -1390,20 +1390,20 @@ Buffers stay open and silently reconnect next time they're touched."
   (setq my/org-roam-sync-timer
         (run-at-time 1800 1800 (lambda () (my/org-roam-sync t)))))
 
-;; every save inside the roam folder commits locally: per-edit history,
-;; works offline, and the next sync pushes it all
-(defun my/org-roam--auto-commit ()
-  (when (and buffer-file-name
-             (bound-and-true-p org-roam-directory)
-             (file-in-directory-p buffer-file-name org-roam-directory)
-             (file-directory-p (expand-file-name ".git" org-roam-directory)))
+;; sync once more on the way out. the commit is local and instant; the
+;; push is best-effort with a short connection timeout so a dead network
+;; can't hang the exit (whatever doesn't make it goes out at the next
+;; startup sync)
+(defun my/org-roam--sync-on-exit ()
+  (when (bound-and-true-p org-roam-directory)
     (let ((default-directory (expand-file-name org-roam-directory)))
-      (start-process-shell-command
-       "org-roam-autocommit" nil
-       (format "git add -A && (git diff --cached --quiet || git commit -m %s)"
-               (shell-quote-argument
-                (concat "edit " (file-name-nondirectory buffer-file-name))))))))
-(add-hook 'after-save-hook #'my/org-roam--auto-commit)
+      (when (file-directory-p ".git")
+        (call-process-shell-command
+         (concat "git add -A && "
+                 "(git diff --cached --quiet || git commit -m \"sync from $(hostname -s)\") && "
+                 "GIT_SSH_COMMAND='ssh -o ConnectTimeout=5 -o BatchMode=yes' git push")
+         nil nil)))))
+(add-hook 'kill-emacs-hook #'my/org-roam--sync-on-exit)
 
 (use-package org-roam-ui
   :straight

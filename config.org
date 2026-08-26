@@ -297,7 +297,7 @@ Changed lines show in the fringe (diff-hl). On Tramp repos prefer =SPC g d= / =S
 | ~SPC o f~    | Evil normal/visual | ~org-roam-node-find~      | Find/create Org-roam node                    |
 | ~SPC o l~    | Evil normal/visual | ~org-roam-buffer-toggle~  | Toggle backlinks buffer                       |
 | ~SPC o g~    | Evil normal/visual | ~org-roam-ui-mode~        | Open Org-roam graph UI                        |
-| ~SPC o r~    | Evil normal/visual | ~my/org-roam-sync~        | Sync notes repo now (auto-syncs every 30 min) |
+| ~SPC o r~    | Evil normal/visual | ~my/org-roam-sync~        | Sync notes repo now (auto: start, quit, every 30 min) |
 
 Notes are organized as project nodes (=projects/research/=, =projects/personal/=) with
 =todo.org= as the single dashboard for every TODO/priority/deadline, and the whole folder
@@ -2655,10 +2655,11 @@ place):
 *** Syncing across machines (git)
 =~/org-roam= is a private git repo ([[https://github.com/EdwardoSunny/org-roam][EdwardoSunny/org-roam]]). Fully reproducible: on a
 machine where the directory doesn't exist, the config clones it on startup. From there:
-- every save inside the roam folder auto-commits locally, so there is per-edit history even
-  offline
-- a pull runs shortly after startup and a full sync (commit + pull --rebase + push) runs in
-  the background every 30 minutes
+- a full sync (commit everything + pull --rebase + push) runs shortly after startup, again
+  quietly every 30 minutes, and once more when Emacs quits — so a session produces a handful
+  of commits, not one per save
+- the quit-time push uses a 5s connection timeout, so a dead network can't hang the exit;
+  anything unpushed just goes out at the next startup sync
 - =SPC o r= syncs right now (e.g. before closing the laptop); failures land in the
   =*org-roam-sync*= buffer
 
@@ -2702,20 +2703,20 @@ background pull --rebase stops and reports; resolve in the roam folder like any 
   (setq my/org-roam-sync-timer
         (run-at-time 1800 1800 (lambda () (my/org-roam-sync t)))))
 
-;; every save inside the roam folder commits locally: per-edit history,
-;; works offline, and the next sync pushes it all
-(defun my/org-roam--auto-commit ()
-  (when (and buffer-file-name
-             (bound-and-true-p org-roam-directory)
-             (file-in-directory-p buffer-file-name org-roam-directory)
-             (file-directory-p (expand-file-name ".git" org-roam-directory)))
+;; sync once more on the way out. the commit is local and instant; the
+;; push is best-effort with a short connection timeout so a dead network
+;; can't hang the exit (whatever doesn't make it goes out at the next
+;; startup sync)
+(defun my/org-roam--sync-on-exit ()
+  (when (bound-and-true-p org-roam-directory)
     (let ((default-directory (expand-file-name org-roam-directory)))
-      (start-process-shell-command
-       "org-roam-autocommit" nil
-       (format "git add -A && (git diff --cached --quiet || git commit -m %s)"
-               (shell-quote-argument
-                (concat "edit " (file-name-nondirectory buffer-file-name))))))))
-(add-hook 'after-save-hook #'my/org-roam--auto-commit)
+      (when (file-directory-p ".git")
+        (call-process-shell-command
+         (concat "git add -A && "
+                 "(git diff --cached --quiet || git commit -m \"sync from $(hostname -s)\") && "
+                 "GIT_SSH_COMMAND='ssh -o ConnectTimeout=5 -o BatchMode=yes' git push")
+         nil nil)))))
+(add-hook 'kill-emacs-hook #'my/org-roam--sync-on-exit)
 #+end_src
 
 *** Org-roam-ui

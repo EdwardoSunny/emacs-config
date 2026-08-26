@@ -3059,6 +3059,38 @@ Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single p
 #+end_src
 
 
+* Treemacs (project tree sidebar)
+Icon file tree on the left (=SPC e= toggles), projectile-aware (one workspace
+per project), evil keys inside the tree, all-the-icons theme to match the
+rest of the UI. =SPC o e= focuses the tree from anywhere.
+
+#+begin_src emacs-lisp
+(use-package treemacs
+  :defer t
+  :custom
+  (treemacs-width 32)
+  (treemacs-follow-after-init t)
+  (treemacs-is-never-other-window t)
+  :config
+  (treemacs-follow-mode 1)
+  (treemacs-filewatch-mode 1)
+  (treemacs-git-mode 'simple))
+
+(use-package treemacs-evil
+  :after (treemacs evil))
+
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+(use-package treemacs-all-the-icons
+  :after (treemacs all-the-icons)
+  :config (treemacs-load-theme "all-the-icons"))
+
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+  "e"   '(treemacs :wk "file tree")
+  "o e" '(treemacs-select-window :wk "focus file tree"))
+#+end_src
+
 * Clanker (AI coding on my own harness)
 Cursor/continue.dev-style AI coding backed by my clanker harness
 ([[https://github.com/clanker-harness/clanker.el][clanker.el]] driving a persistent =clanker stdio= backend per project —
@@ -3090,6 +3122,17 @@ ones the harness needs the same way PATH is fixed above.
   (clanker-binary "/opt/homebrew/bin/clanker")
   (clanker-keymap-prefix "C-c k")
   :config
+  ;; projectile owns project detection here — clanker follows it (falls back
+  ;; to project.el when projectile has no project).
+  (setopt clanker-root-function
+          (lambda ()
+            (or (and (fboundp 'projectile-project-root) (projectile-project-root))
+                (clanker-default-root))))
+  (setopt clanker-project-files-function
+          (lambda ()
+            (or (and (fboundp 'projectile-current-project-files)
+                     (ignore-errors (projectile-current-project-files)))
+                (clanker-default-project-files))))
   (clanker-mode 1))
 
 (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"

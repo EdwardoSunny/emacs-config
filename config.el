@@ -7,6 +7,11 @@
   (setq exec-path-from-shell-arguments '("-i" "-l"))
   ;; don't nag about PATH living in .zshrc; that's deliberate here
   (setq exec-path-from-shell-check-startup-files nil)
+  ;; The default warns at 500ms: "Warning: exec-path-from-shell execution
+  ;; took NNNms". A warm zsh here takes ~150ms but the first launch after a
+  ;; boot can cross 1s, which is expected for one login shell and not worth
+  ;; a warning on every cold start. Keep the alarm for pathological cases.
+  (setq exec-path-from-shell-warn-duration-millis 3000)
   :config
   ;; a terminal Emacs already inherited a good PATH, only GUI needs this
   (when (memq window-system '(mac ns x))
@@ -467,7 +472,13 @@ any other key exits this function."
   :config
   (editorconfig-mode 1))
 
+;; :defer t — magit was the single biggest startup cost (~4s) and every
+;; entry point used here (magit-status, the dispatch menus, blame, log) is
+;; autoloaded, so nothing needs it at init. It loads on the first SPC g …
+;; instead. :custom still applies immediately; the diff-hl magit hooks are
+;; plain add-hook on symbols, which is defer-safe.
 (use-package magit
+  :defer t
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
@@ -558,7 +569,8 @@ any other key exits this function."
       (lsp-ui-doc-enable t)
       (lsp-ui-doc-position 'at-point)
       (lsp-ui-doc-show-with-mouse t)    ; popup on mouse hover, like VS Code
-      (lsp-ui-doc-show-with-cursor nil) ; but don't chase the cursor around
+      (lsp-ui-doc-show-with-cursor t)   ; resting point on a symbol pops it too
+      (lsp-ui-doc-delay 0.5)            ; after this many idle seconds
       (lsp-ui-sideline-show-diagnostics t)
       (lsp-ui-sideline-show-code-actions t)
       (lsp-ui-sideline-show-hover nil)) ; hover text inline is noise, doc popup covers it
@@ -603,6 +615,82 @@ any other key exits this function."
    (when (require 'flycheck nil t)
          (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
          (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+(defun my/python-project-venv ()
+  "Find the project virtualenv for the current buffer, or nil.
+Walks up from the buffer's directory looking for a .venv/ or venv/
+directory that contains bin/python."
+  (unless (file-remote-p default-directory)
+    (let ((start (if (buffer-file-name)
+                     (file-name-directory (buffer-file-name))
+                   default-directory))
+          found)
+      (locate-dominating-file
+       start
+       (lambda (dir)
+         (let ((hit (seq-find
+                     (lambda (name)
+                       (file-executable-p
+                        (expand-file-name (concat name "/bin/python") dir)))
+                     '(".venv" "venv"))))
+           (when hit (setq found (expand-file-name hit dir)))
+           hit)))
+      found)))
+
+(defun my/python-apply-env (env)
+  "Point the python IDE at ENV, a virtualenv or conda env directory.
+Sets jedi's environment for pylsp (buffer-locally, read when the
+workspace initializes) and activates the env with pyvenv so new
+subprocesses inherit its PATH."
+  (setq-local lsp-pylsp-plugins-jedi-environment env)
+  (when (and (fboundp 'pyvenv-activate)
+             (not (equal (bound-and-true-p pyvenv-virtual-env)
+                         (file-name-as-directory (expand-file-name env)))))
+    (pyvenv-activate env)))
+
+(defun my/python-auto-env ()
+  "Auto-wire the project's .venv into the IDE, when there is one."
+  (when-let ((venv (my/python-project-venv)))
+    (my/python-apply-env venv)
+    (message "python env: %s" (abbreviate-file-name venv))))
+
+;; lsp-deferred delays the server start, so by the time the workspace
+;; initializes the buffer-local jedi environment is already in place,
+;; regardless of hook order
+(add-hook 'python-mode-hook #'my/python-auto-env)
+
+(defun my/python-conda-envs ()
+  "Conda/mamba environment directories from the usual install locations."
+  (let (envs)
+    (dolist (base '("~/miniconda3" "~/anaconda3" "~/miniforge3"
+                    "~/mambaforge" "~/.conda" "/opt/miniconda3"
+                    "/opt/homebrew/Caskroom/miniconda/base"))
+      (let ((dir (expand-file-name "envs" base)))
+        (when (file-directory-p dir)
+          (dolist (env (directory-files dir t "\\`[^.]"))
+            (when (file-executable-p (expand-file-name "bin/python" env))
+              (push env envs))))))
+    (nreverse envs)))
+
+(defun my/python-choose-env (env)
+  "Pick ENV (a conda env or any virtualenv directory) for this buffer's IDE.
+Offers discovered conda envs plus the auto-detected project venv; any
+other directory can be typed in. Restarts pylsp so jedi switches
+immediately."
+  (interactive
+   (list (let ((cands (append (when-let ((v (my/python-project-venv)))
+                                (list v))
+                              (my/python-conda-envs))))
+           (if cands
+               (completing-read "Python env (or type a path): " cands nil nil)
+             (read-directory-name "Python env directory: ")))))
+  (setq env (expand-file-name env))
+  (unless (file-executable-p (expand-file-name "bin/python" env))
+    (user-error "%s has no bin/python" env))
+  (my/python-apply-env env)
+  (when (and (fboundp 'lsp-workspaces) (lsp-workspaces))
+    (lsp-workspace-restart (car (lsp-workspaces))))
+  (message "python env: %s" (abbreviate-file-name env)))
 
 (use-package python-mode
   :straight nil
@@ -664,7 +752,11 @@ any other key exits this function."
 (use-package yasnippet-snippets)
 
 (use-package apheleia
-  :commands (apheleia-format-buffer apheleia-mode))
+  :commands (apheleia-format-buffer apheleia-mode)
+  ;; load shortly after startup rather than during it
+  :defer 1
+  :config
+  (apheleia-global-mode +1))
 
 (use-package dumb-jump
   :config
@@ -1307,6 +1399,16 @@ Buffers stay open and silently reconnect next time they're touched."
 
 (require `org-tempo)
 
+;; on a fresh clone without --recurse-submodules the submodule is an empty
+;; directory; pull it here so the config bootstraps itself
+(let ((chrono-el (expand-file-name "lisp/chronoscope/chronoscope.el"
+                                   user-emacs-directory)))
+  (unless (file-exists-p chrono-el)
+    (message "chronoscope submodule missing, fetching it...")
+    (let ((default-directory user-emacs-directory))
+      (call-process "git" nil "*chronoscope-submodule*" nil
+                    "submodule" "update" "--init" "lisp/chronoscope"))))
+
 (use-package chronoscope
   :straight nil
   :load-path "lisp/chronoscope"
@@ -1355,6 +1457,7 @@ Buffers stay open and silently reconnect next time they're touched."
     "c p" '(flycheck-previous-error :wk "previous error")
     "c R" '(lsp-rename :wk "rename symbol (lsp)")
     "c s" '(counsel-imenu :wk "jump to symbol in buffer")
+    "c v" '(my/python-choose-env :wk "pick python env (conda/venv)")
     ;; git
     "g" '(:ignore t :wk "git")
     "g g" '(magit-status :wk "magit status")
@@ -1477,3 +1580,34 @@ Buffers stay open and silently reconnect next time they're touched."
 (global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
 
 (global-set-key [escape] `keyboard-escape-quit)
+
+(when (and (memq window-system '(mac ns x))
+           (fboundp 'exec-path-from-shell-copy-envs))
+  (let ((default-directory (expand-file-name "~/")))
+    (ignore-errors
+      (exec-path-from-shell-copy-envs
+       '("ANTHROPIC_API_KEY" "OPENROUTER_API_KEY" "OPENAI_API_KEY")))))
+
+(use-package clanker
+  :straight nil
+  :load-path "~/Documents/personal/clanker.el"
+  :custom
+  (clanker-binary "/opt/homebrew/bin/clanker")
+  (clanker-keymap-prefix "C-c k")
+  :config
+  (clanker-mode 1))
+
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+  "k"   '(:ignore t :wk "clanker")
+  "k k" '(clanker-edit :wk "edit region (Cmd+K)")
+  "k g" '(clanker-generate :wk "generate at point")
+  "k f" '(clanker-fix :wk "fix region")
+  "k e" '(clanker-explain :wk "explain region")
+  "k c" '(clanker-chat :wk "chat")
+  "k a" '(clanker-agent :wk "agent task")
+  "k n" '(clanker-new-session :wk "new session")
+  "k t" '(clanker-completion-mode :wk "toggle tab completion")
+  "k m" '(clanker-set-model :wk "switch model")
+  "k r" '(clanker-set-effort :wk "reasoning effort")
+  "k i" '(clanker-complete :wk "complete at point")
+  "k s" '(clanker-add-context :wk "reference region in chat"))

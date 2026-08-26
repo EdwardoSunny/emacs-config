@@ -453,8 +453,10 @@ help, rename, live diagnostics, formatting.
 
 Nothing to start manually:
 - *Python* — opening any =.py= file starts pylsp (jedi completions, pyflakes lint, rope
-  rename). For a project using a virtualenv, =M-x pyvenv-activate= first so third-party
-  imports resolve.
+  rename). Projects with their own environment just work: a =.venv/= or =venv/= anywhere up
+  the tree (uv, poetry, =python -m venv=) is auto-detected and wired into jedi + pyvenv
+  before the server starts. For conda (or any other env), =SPC c v= picks one and restarts
+  pylsp. See [[#project-environments-uv--poetry--conda][Project environments]].
 - *C/C++* — opening a =.c= / =.cpp= / header starts clangd.
 - *Remote (Tramp) files* — kept cheap by default; =SPC r l= opts the buffer in
   ([[#opt-in-remote-lsp][Opt-in Remote LSP]]).
@@ -482,6 +484,7 @@ No new keys to learn — lsp-ui works ambiently in any LSP buffer (setup in [[#l
 | Trigger                           | Context     | What happens                                                 |
 |-----------------------------------+-------------+--------------------------------------------------------------|
 | mouse hover                       | LSP buffers | Doc popup for the symbol under the mouse, like VS Code       |
+| rest cursor on symbol (0.5s)      | LSP buffers | Same doc popup, keyboard-driven (=C-g= dismisses)            |
 | (automatic)                       | LSP buffers | Sideline: diagnostics + available code actions inline at eol |
 | ~M-x lsp-ui-peek-find-references~ | LSP buffers | References in an inline peek overlay, no window switch       |
 | (automatic)                       | C/C++       | Semantic tokens: server-driven scope-aware variable colors   |
@@ -509,7 +512,8 @@ project with ripgrep when it isn't (including remote Tramp buffers).
 |--------------+--------------------+--------------------------------+--------------------------------------|
 | ~SPC c R~    | Evil normal/visual | ~lsp-rename~                   | Rename symbol project-wide (LSP)     |
 | ~SPC c a~    | Evil normal/visual | ~lsp-execute-code-action~      | Apply a code action (LSP)            |
-| ~SPC c f~    | Evil normal/visual | ~apheleia-format-buffer~       | Format buffer (black/clang-format)   |
+| ~SPC c v~    | Evil normal/visual | ~my/python-choose-env~         | Pick python env (conda/venv), restart pylsp |
+| ~SPC c f~    | Evil normal/visual | ~apheleia-format-buffer~       | Format buffer now (saving also formats automatically) |
 | ~SPC c c~    | Evil normal/visual | ~comment-line~                 | Comment/uncomment lines              |
 | ~gc<motion>~ | Evil normal        | ~evilnc-comment-operator~      | Comment as a vim operator (~gcc~, ~gcap~) |
 
@@ -732,6 +736,11 @@ which every zsh reads, I can drop =-i= and skip the oh-my-zsh startup cost.
   (setq exec-path-from-shell-arguments '("-i" "-l"))
   ;; don't nag about PATH living in .zshrc; that's deliberate here
   (setq exec-path-from-shell-check-startup-files nil)
+  ;; The default warns at 500ms: "Warning: exec-path-from-shell execution
+  ;; took NNNms". A warm zsh here takes ~150ms but the first launch after a
+  ;; boot can cross 1s, which is expected for one login shell and not worth
+  ;; a warning on every cold start. Keep the alarm for pathological cases.
+  (setq exec-path-from-shell-warn-duration-millis 3000)
   :config
   ;; a terminal Emacs already inherited a good PATH, only GUI needs this
   (when (memq window-system '(mac ns x))
@@ -1291,7 +1300,13 @@ Keybinds live under =SPC g= (see [[#git-magit--diff-hl][Git]] in the guide): =SP
 =SPC g d= / =SPC g f= for the dispatch menus — the dispatch route is the cheap one on Tramp
 repos, per [[#keeping-tooling-off-remote-buffers][Keeping Tooling Off Remote Buffers]].
 #+begin_src emacs-lisp
+;; :defer t — magit was the single biggest startup cost (~4s) and every
+;; entry point used here (magit-status, the dispatch menus, blame, log) is
+;; autoloaded, so nothing needs it at init. It loads on the first SPC g …
+;; instead. :custom still applies immediately; the diff-hl magit hooks are
+;; plain add-hook on symbols, which is defer-safe.
 (use-package magit
+  :defer t
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 #+end_src
@@ -1434,8 +1449,11 @@ byte-compiled, i.e. a straight rebuild — not worth it until there's an actual 
 
 *** LSP UI (VS Code-style extras)
 =lsp-ui= layers the visual half of a VS Code experience on top of lsp-mode:
-- *Hover docs* — mouse over a symbol and a popup shows its docstring/signature, like VS Code.
-  (Cursor-hover popups are off; =SPC c h= stays the deliberate "show me docs" key.)
+- *Hover docs* — mouse over a symbol, or just rest the cursor on one for half a second
+  (=lsp-ui-doc-delay=), and a popup shows its docstring/signature, like VS Code. =SPC c h=
+  stays the explicit "show me docs" key; =C-g= dismisses a popup. If the popup never appears
+  for a library symbol, the server has no docs to give — in a python project that almost
+  always means jedi isn't looking at the project's env, see [[#project-environments-uv--poetry--conda][Project environments]].
 - *Sideline* — diagnostics and available code actions render inline at the end of the line,
   so you see the error text without hovering or opening the error list.
 - *Peek* — =M-x lsp-ui-peek-find-references= shows references in an inline overlay without
@@ -1455,7 +1473,8 @@ it; pylsp doesn't (python falls back to regular font-lock, no harm).
       (lsp-ui-doc-enable t)
       (lsp-ui-doc-position 'at-point)
       (lsp-ui-doc-show-with-mouse t)    ; popup on mouse hover, like VS Code
-      (lsp-ui-doc-show-with-cursor nil) ; but don't chase the cursor around
+      (lsp-ui-doc-show-with-cursor t)   ; resting point on a symbol pops it too
+      (lsp-ui-doc-delay 0.5)            ; after this many idle seconds
       (lsp-ui-sideline-show-diagnostics t)
       (lsp-ui-sideline-show-code-actions t)
       (lsp-ui-sideline-show-hover nil)) ; hover text inline is noise, doc popup covers it
@@ -1525,6 +1544,103 @@ After a new clone, don't forget to run =M-x elpy-rpc-reinstall-virtualenv=, othe
    (when (require 'flycheck nil t)
          (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
          (add-hook 'elpy-mode-hook 'flycheck-mode))
+#+end_src
+
+*** Project environments (uv / poetry / conda)
+pylsp is installed once, globally, as a =uv tool= — its shebang points into
+=~/.local/share/uv/tools/python-lsp-server/=, an isolated environment that contains pylsp and
+nothing else. jedi (which does completion, hover and go-to-definition inside pylsp) resolves
+imports against *that* environment, so in any project with its own env (uv's =.venv=, poetry,
+conda) every third-party import silently gets zero completions. Verified against
+=~/Documents/personal/deep-learn=: =np.= completed to nothing until jedi was pointed at the
+project's =.venv=.
+
+Two pieces fix it:
+- *Automatic:* opening a =.py= file walks up for a =.venv/= or =venv/= with =bin/python=
+  (uv, poetry and =python -m venv= all use this layout) and, before pylsp starts, sets
+  =pylsp.plugins.jedi.environment= for that workspace and activates the env with pyvenv so
+  subprocesses (=run-python=, black, elpy's RPC) use the same interpreter.
+- *Manual (=SPC c v=):* conda envs can't be guessed from the project, so =SPC c v= lists every
+  env found under the usual conda/mamba install roots (plus the detected project venv, plus
+  any path you type) and restarts pylsp so jedi switches immediately.
+
+Remote (Tramp) buffers are left alone — remote LSP stays opt-in via =SPC r l=.
+#+begin_src emacs-lisp
+(defun my/python-project-venv ()
+  "Find the project virtualenv for the current buffer, or nil.
+Walks up from the buffer's directory looking for a .venv/ or venv/
+directory that contains bin/python."
+  (unless (file-remote-p default-directory)
+    (let ((start (if (buffer-file-name)
+                     (file-name-directory (buffer-file-name))
+                   default-directory))
+          found)
+      (locate-dominating-file
+       start
+       (lambda (dir)
+         (let ((hit (seq-find
+                     (lambda (name)
+                       (file-executable-p
+                        (expand-file-name (concat name "/bin/python") dir)))
+                     '(".venv" "venv"))))
+           (when hit (setq found (expand-file-name hit dir)))
+           hit)))
+      found)))
+
+(defun my/python-apply-env (env)
+  "Point the python IDE at ENV, a virtualenv or conda env directory.
+Sets jedi's environment for pylsp (buffer-locally, read when the
+workspace initializes) and activates the env with pyvenv so new
+subprocesses inherit its PATH."
+  (setq-local lsp-pylsp-plugins-jedi-environment env)
+  (when (and (fboundp 'pyvenv-activate)
+             (not (equal (bound-and-true-p pyvenv-virtual-env)
+                         (file-name-as-directory (expand-file-name env)))))
+    (pyvenv-activate env)))
+
+(defun my/python-auto-env ()
+  "Auto-wire the project's .venv into the IDE, when there is one."
+  (when-let ((venv (my/python-project-venv)))
+    (my/python-apply-env venv)
+    (message "python env: %s" (abbreviate-file-name venv))))
+
+;; lsp-deferred delays the server start, so by the time the workspace
+;; initializes the buffer-local jedi environment is already in place,
+;; regardless of hook order
+(add-hook 'python-mode-hook #'my/python-auto-env)
+
+(defun my/python-conda-envs ()
+  "Conda/mamba environment directories from the usual install locations."
+  (let (envs)
+    (dolist (base '("~/miniconda3" "~/anaconda3" "~/miniforge3"
+                    "~/mambaforge" "~/.conda" "/opt/miniconda3"
+                    "/opt/homebrew/Caskroom/miniconda/base"))
+      (let ((dir (expand-file-name "envs" base)))
+        (when (file-directory-p dir)
+          (dolist (env (directory-files dir t "\\`[^.]"))
+            (when (file-executable-p (expand-file-name "bin/python" env))
+              (push env envs))))))
+    (nreverse envs)))
+
+(defun my/python-choose-env (env)
+  "Pick ENV (a conda env or any virtualenv directory) for this buffer's IDE.
+Offers discovered conda envs plus the auto-detected project venv; any
+other directory can be typed in. Restarts pylsp so jedi switches
+immediately."
+  (interactive
+   (list (let ((cands (append (when-let ((v (my/python-project-venv)))
+                                (list v))
+                              (my/python-conda-envs))))
+           (if cands
+               (completing-read "Python env (or type a path): " cands nil nil)
+             (read-directory-name "Python env directory: ")))))
+  (setq env (expand-file-name env))
+  (unless (file-executable-p (expand-file-name "bin/python" env))
+    (user-error "%s has no bin/python" env))
+  (my/python-apply-env env)
+  (when (and (fboundp 'lsp-workspaces) (lsp-workspaces))
+    (lsp-workspace-restart (car (lsp-workspaces))))
+  (message "python env: %s" (abbreviate-file-name env)))
 #+end_src
 
 ** Python Mode
@@ -1629,20 +1745,28 @@ completions (e.g. function signatures with placeholder args) through yasnippet w
 #+end_src
 
 ** Apheleia (Code Formatting)
-On-demand code formatting with the project's own formatter — =black= / =ruff= for python,
-=clang-format= for C/C++, etc. Bound to =SPC c f=.
+Code formatting with the language's formatter — =black= for python, =clang-format= for
+C/C++, etc. *Format-on-save is on globally*: every save reformats the buffer through
+=apheleia-global-mode=. It's asynchronous and applies the result as a patch, so the cursor
+doesn't jump and a slow formatter never blocks typing. =SPC c f= stays for formatting
+without saving.
 
-Deliberately *not* =apheleia-global-mode= (format on every save): research repos and class
-skeletons rarely agree with black about the whole file, and a save that rewrites 300 lines
-makes ugly diffs. On-demand keeps formatting a decision, not a side effect. If a project does
-enforce a formatter, =M-x apheleia-mode= in that buffer turns format-on-save on.
+Opting out when a file/project shouldn't be reformatted (e.g. a class skeleton where a
+full-file rewrite makes ugly diffs):
+- =M-x apheleia-mode= toggles format-on-save off for that buffer
+- setting =apheleia-inhibit= to =t= in a project's =.dir-locals.el= turns it off project-wide
 
-Formatters run through Emacs, so the binary must exist on the machine with the file — locally
-via =pip install black= / =brew install clang-format=; on a remote host apheleia runs the remote
-binary over the existing Tramp connection.
+If saving ever stops formatting, it's almost always the binary: the formatter must exist on
+the machine with the file (=black= and =clang-format= live in =~/.local/bin= locally; on a
+remote host apheleia runs the remote binary over Tramp). =M-x apheleia-goto-error= shows the
+formatter's stderr when a run fails.
 #+begin_src emacs-lisp
 (use-package apheleia
-  :commands (apheleia-format-buffer apheleia-mode))
+  :commands (apheleia-format-buffer apheleia-mode)
+  ;; load shortly after startup rather than during it
+  :defer 1
+  :config
+  (apheleia-global-mode +1))
 #+end_src
 
 ** Code Navigation (xref, dumb-jump, avy)
@@ -2614,6 +2738,16 @@ in-buffer keys (~s~, ~r~, ~l~, ~t~, ~m~, ~a~, ~c~, ~q~ …) are defined by the p
 evil normal state; the =SPC o s= / =SPC o S= launchers live in [[#generalel-keybindings][General.el Keybindings]] and the
 day-to-day reference is [[#timer--stopwatch-chronoscope][Timer & Stopwatch (Chronoscope)]].
 #+begin_src emacs-lisp
+;; on a fresh clone without --recurse-submodules the submodule is an empty
+;; directory; pull it here so the config bootstraps itself
+(let ((chrono-el (expand-file-name "lisp/chronoscope/chronoscope.el"
+                                   user-emacs-directory)))
+  (unless (file-exists-p chrono-el)
+    (message "chronoscope submodule missing, fetching it...")
+    (let ((default-directory user-emacs-directory))
+      (call-process "git" nil "*chronoscope-submodule*" nil
+                    "submodule" "update" "--init" "lisp/chronoscope"))))
+
 (use-package chronoscope
   :straight nil
   :load-path "lisp/chronoscope"
@@ -2673,6 +2807,7 @@ so all three just errored. Provide both.
     "c p" '(flycheck-previous-error :wk "previous error")
     "c R" '(lsp-rename :wk "rename symbol (lsp)")
     "c s" '(counsel-imenu :wk "jump to symbol in buffer")
+    "c v" '(my/python-choose-env :wk "pick python env (conda/venv)")
     ;; git
     "g" '(:ignore t :wk "git")
     "g g" '(magit-status :wk "magit status")
@@ -2808,3 +2943,49 @@ Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single p
 (global-set-key [escape] `keyboard-escape-quit)
 #+end_src
 
+
+* Clanker (AI coding on my own harness)
+Cursor/continue.dev-style AI coding backed by my clanker harness
+([[https://github.com/clanker-harness/clanker.el][clanker.el]] driving a persistent =clanker stdio= backend per project —
+DeepSeek Harness underneath). Chat/edit/explain run the backend in *plan mode*
+(it can read and grep the project for context but cannot mutate; Emacs applies
+edits with a diff preview), only =clanker-agent= runs with tools.
+
+- =C-c k …= — the full command map (=C-c c= belongs to claude-code.el here)
+- =SPC k …= — the same commands on the leader
+
+GUI Emacs launched from the dock doesn't have my shell's API keys, so copy the
+ones the harness needs the same way PATH is fixed above.
+
+#+begin_src emacs-lisp
+(when (and (memq window-system '(mac ns x))
+           (fboundp 'exec-path-from-shell-copy-envs))
+  (let ((default-directory (expand-file-name "~/")))
+    (ignore-errors
+      (exec-path-from-shell-copy-envs
+       '("ANTHROPIC_API_KEY" "OPENROUTER_API_KEY" "OPENAI_API_KEY")))))
+
+(use-package clanker
+  :straight nil
+  :load-path "~/Documents/personal/clanker.el"
+  :custom
+  (clanker-binary "/opt/homebrew/bin/clanker")
+  (clanker-keymap-prefix "C-c k")
+  :config
+  (clanker-mode 1))
+
+(nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
+  "k"   '(:ignore t :wk "clanker")
+  "k k" '(clanker-edit :wk "edit region (Cmd+K)")
+  "k g" '(clanker-generate :wk "generate at point")
+  "k f" '(clanker-fix :wk "fix region")
+  "k e" '(clanker-explain :wk "explain region")
+  "k c" '(clanker-chat :wk "chat")
+  "k a" '(clanker-agent :wk "agent task")
+  "k n" '(clanker-new-session :wk "new session")
+  "k t" '(clanker-completion-mode :wk "toggle tab completion")
+  "k m" '(clanker-set-model :wk "switch model")
+  "k r" '(clanker-set-effort :wk "reasoning effort")
+  "k i" '(clanker-complete :wk "complete at point")
+  "k s" '(clanker-add-context :wk "reference region in chat"))
+#+end_src

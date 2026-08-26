@@ -3131,7 +3131,7 @@ ones the harness needs the same way PATH is fixed above.
 
 (use-package clanker
   :straight nil
-  :load-path "~/Documents/personal/clanker.el"
+  :load-path "~/Documents/personal/clanker.el/lisp"
   :custom
   (clanker-binary "/opt/homebrew/bin/clanker")
   (clanker-keymap-prefix "C-c k")

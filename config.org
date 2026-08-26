@@ -3062,9 +3062,12 @@ Default emacs requires 3 times hit ESC to quit minibuffer. Here we bind single p
 * Clanker (AI coding on my own harness)
 Cursor/continue.dev-style AI coding backed by my clanker harness
 ([[https://github.com/clanker-harness/clanker.el][clanker.el]] driving a persistent =clanker stdio= backend per project —
-DeepSeek Harness underneath). Chat/edit/explain run the backend in *plan mode*
-(it can read and grep the project for context but cannot mutate; Emacs applies
-edits with a diff preview), only =clanker-agent= runs with tools.
+DeepSeek Harness underneath). The chat panel (=SPC k c=, left sidebar) is a
+FULL AGENT: it reads/edits/runs commands with minibuffer approvals (=C-c C-m=
+cycles auto/plan/yolo). Tabs (=SPC k b= new, =SPC k o= cycle, =SPC k l= list)
+are independent parallel conversations with real tab-line tabs. Select code in
+visual mode then =SPC k c= to attach it as a reference (⌖ chip + apply-block
+target). Inline edit/generate still preview diffs before touching buffers.
 
 - =C-c k …= — the full command map (=C-c c= belongs to claude-code.el here)
 - =SPC k …= — the same commands on the leader
@@ -3102,5 +3105,13 @@ ones the harness needs the same way PATH is fixed above.
   "k m" '(clanker-set-model :wk "switch model")
   "k r" '(clanker-set-effort :wk "reasoning effort")
   "k i" '(clanker-complete :wk "complete at point")
-  "k s" '(clanker-add-context :wk "reference region in chat"))
+  "k s" '(clanker-add-context :wk "reference region in chat")
+  "k b" '(clanker-chat-new-tab :wk "new chat tab")
+  "k o" '(clanker-chat-other-tab :wk "cycle chat tabs")
+  "k l" '(clanker-chat-switch-tab :wk "list chat tabs")
+  "k u" '(clanker-undo-edit :wk "undo agent edit")
+  "k d" '(clanker-todos :wk "todo list")
+  "k v" '(clanker-tui :wk "full TUI (vterm)")
+  "k F" '(clanker-toggle-fast :wk "toggle fast tier")
+  "k R" '(clanker-restart-backend :wk "restart backend"))
 #+end_src

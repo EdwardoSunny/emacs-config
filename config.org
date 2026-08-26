@@ -3077,7 +3077,21 @@ rest of the UI. =SPC o e= focuses the tree from anywhere.
   (treemacs-git-mode 'simple))
 
 (use-package treemacs-evil
-  :after (treemacs evil))
+  :after (treemacs evil)
+  :config
+  ;; treemacs buffers use their own evil STATE, where the SPC leader isn't
+  ;; active — without this, "SPC w l" falls through to treemacs's own `w'
+  ;; (set-width prompt). Re-declare the window motions + toggle there.
+  (general-define-key
+   :states 'treemacs
+   :keymaps 'override
+   :prefix "SPC"
+   "e"  '(treemacs :wk "toggle file tree")
+   "wh" '(evil-window-left :wk "windmove-left")
+   "wj" '(evil-window-down :wk "windmove-down")
+   "wk" '(evil-window-up :wk "windmove-up")
+   "wl" '(evil-window-right :wk "windmove-right")
+   "ww" '(evil-window-next :wk "windmove-next")))
 
 (use-package treemacs-projectile
   :after (treemacs projectile))

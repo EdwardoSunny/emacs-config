@@ -84,6 +84,7 @@
   - [[#misc-non-evil-keybindings][Misc Non-evil Keybindings]]
   - [[#zoom][Zoom]]
   - [[#minibuffer-escape][Minibuffer Escape]]
+- [[#html-viewinghosting][HTML Viewing/Hosting]]
 
 * Keybinds Guide
 Here's a guide to the keybinds in my configuration.
@@ -3177,4 +3178,11 @@ ones the harness needs the same way PATH is fixed above.
   "k v" '(clanker-tui :wk "full TUI (vterm)")
   "k F" '(clanker-toggle-fast :wk "toggle fast tier")
   "k R" '(clanker-restart-backend :wk "restart backend"))
+#+end_src
+* HTML Viewing/Hosting
+Be able to preview HTML files/websites for my personal website directly by hosting the files on local machine and be able to pull up on a browser. Also makes local changes to files immediately visible in the hosted website.
+
+#+begin_src emacs-lisp
+(use-package simple-httpd
+  :ensure t)
 #+end_src

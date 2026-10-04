@@ -1695,3 +1695,5 @@ Buffers stay open and silently reconnect next time they're touched."
   "k v" '(clanker-tui :wk "full TUI (vterm)")
   "k F" '(clanker-toggle-fast :wk "toggle fast tier")
   "k R" '(clanker-restart-backend :wk "restart backend"))
+(use-package simple-httpd
+  :ensure t)

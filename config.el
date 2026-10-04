@@ -699,7 +699,7 @@ immediately."
 
 ;; (setq python-shell-interpreter "python3") ;; ensure use python3 as interpreter
 
-  (use-package company
+(use-package company
     :after lsp-mode
     :hook (prog-mode . company-mode)
     :bind (:map company-active-map
@@ -742,7 +742,6 @@ immediately."
   :defer t
   :diminish
   :init (global-flycheck-mode))
-
 
 (use-package yasnippet
   :diminish yas-minor-mode
@@ -1124,7 +1123,7 @@ Buffers stay open and silently reconnect next time they're touched."
 (setq display-line-numbers-type 'relative) 
 (global-display-line-numbers-mode)
 
-  ;; increase font size
+;; increase font size
   (set-face-attribute 'default nil :height 140)
 
   ;; (set-face-attribute 'default nil
@@ -1657,43 +1656,44 @@ Buffers stay open and silently reconnect next time they're touched."
 
 (global-set-key [escape] `keyboard-escape-quit)
 
-(when (and (memq window-system '(mac ns x))
-           (fboundp 'exec-path-from-shell-copy-envs))
-  (let ((default-directory (expand-file-name "~/")))
-    (ignore-errors
-      (exec-path-from-shell-copy-envs
-       '("ANTHROPIC_API_KEY" "OPENROUTER_API_KEY" "OPENAI_API_KEY")))))
-
-(use-package clanker
-  :straight nil
-  :load-path "~/Documents/personal/clanker.el"
+(use-package treemacs
+  :defer t
   :custom
-  (clanker-binary "/opt/homebrew/bin/clanker")
-  (clanker-keymap-prefix "C-c k")
+  (treemacs-width 32)
+  (treemacs-follow-after-init t)
+  (treemacs-is-never-other-window t)
   :config
-  (clanker-mode 1))
+  (treemacs-follow-mode 1)
+  (treemacs-filewatch-mode 1)
+  (treemacs-git-mode 'simple))
+
+(use-package treemacs-evil
+  :after (treemacs evil)
+  :config
+  ;; treemacs buffers use their own evil STATE, where the SPC leader isn't
+  ;; active — without this, "SPC w l" falls through to treemacs's own `w'
+  ;; (set-width prompt). Re-declare the window motions + toggle there.
+  (general-define-key
+   :states 'treemacs
+   :keymaps 'override
+   :prefix "SPC"
+   "e"  '(treemacs :wk "toggle file tree")
+   "wh" '(evil-window-left :wk "windmove-left")
+   "wj" '(evil-window-down :wk "windmove-down")
+   "wk" '(evil-window-up :wk "windmove-up")
+   "wl" '(evil-window-right :wk "windmove-right")
+   "ww" '(evil-window-next :wk "windmove-next")))
+
+(use-package treemacs-projectile
+  :after (treemacs projectile))
+
+(use-package treemacs-all-the-icons
+  :after (treemacs all-the-icons)
+  :config (treemacs-load-theme "all-the-icons"))
 
 (nvmap :states '(normal visual) :keymaps 'override :prefix "SPC"
-  "k"   '(:ignore t :wk "clanker")
-  "k k" '(clanker-edit :wk "edit region (Cmd+K)")
-  "k g" '(clanker-generate :wk "generate at point")
-  "k f" '(clanker-fix :wk "fix region")
-  "k e" '(clanker-explain :wk "explain region")
-  "k c" '(clanker-chat :wk "chat")
-  "k a" '(clanker-agent :wk "agent task")
-  "k n" '(clanker-new-session :wk "new session")
-  "k t" '(clanker-completion-mode :wk "toggle tab completion")
-  "k m" '(clanker-set-model :wk "switch model")
-  "k r" '(clanker-set-effort :wk "reasoning effort")
-  "k i" '(clanker-complete :wk "complete at point")
-  "k s" '(clanker-add-context :wk "reference region in chat")
-  "k b" '(clanker-chat-new-tab :wk "new chat tab")
-  "k o" '(clanker-chat-other-tab :wk "cycle chat tabs")
-  "k l" '(clanker-chat-switch-tab :wk "list chat tabs")
-  "k u" '(clanker-undo-edit :wk "undo agent edit")
-  "k d" '(clanker-todos :wk "todo list")
-  "k v" '(clanker-tui :wk "full TUI (vterm)")
-  "k F" '(clanker-toggle-fast :wk "toggle fast tier")
-  "k R" '(clanker-restart-backend :wk "restart backend"))
+  "e"   '(treemacs :wk "file tree")
+  "o e" '(treemacs-select-window :wk "focus file tree"))
+
 (use-package simple-httpd
   :ensure t)
